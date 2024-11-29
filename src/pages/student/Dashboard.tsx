@@ -1,13 +1,29 @@
 import DashboardLayout from "@/components/DashboardLayout";
-import { Card } from "@/components/ui/card";
-import { BookOpen, TrendingUp, Clock, Calendar } from "lucide-react";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { Calendar } from "@/components/ui/calendar";
+import { BookOpen, TrendingUp, Clock, Calendar as CalendarIcon } from "lucide-react";
+import { useState } from "react";
 
 const StudentDashboard = () => {
+  const [date, setDate] = useState<Date | undefined>(new Date());
+
   const stats = [
     { title: "Cours", value: "6", icon: BookOpen, color: "text-primary" },
     { title: "Moyenne", value: "15.5", icon: TrendingUp, color: "text-secondary" },
     { title: "Heures", value: "24", icon: Clock, color: "text-green-500" },
-    { title: "Événements", value: "3", icon: Calendar, color: "text-purple-500" },
+    { title: "Événements", value: "3", icon: CalendarIcon, color: "text-purple-500" },
+  ];
+
+  const assignments = [
+    { subject: "Mathématiques", title: "Exercices Chapitre 3", due: "2024-02-20", status: "En cours" },
+    { subject: "Français", title: "Dissertation", due: "2024-02-22", status: "À faire" },
+    { subject: "Sciences", title: "Rapport de laboratoire", due: "2024-02-25", status: "À faire" },
+  ];
+
+  const schedule = [
+    { time: "08:00", subject: "Mathématiques", room: "A101" },
+    { time: "10:00", subject: "Français", room: "B202" },
+    { time: "14:00", subject: "Sciences", room: "C303" },
   ];
 
   return (
@@ -16,7 +32,7 @@ const StudentDashboard = () => {
         {stats.map((stat) => (
           <Card key={stat.title} className="p-6">
             <div className="flex items-center gap-4">
-              <div className={`p-3 rounded-full bg-neutral-200 ${stat.color}`}>
+              <div className={`p-3 rounded-full bg-neutral-100 ${stat.color}`}>
                 <stat.icon className="w-6 h-6" />
               </div>
               <div>
@@ -29,13 +45,65 @@ const StudentDashboard = () => {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
-        <Card className="p-6">
-          <h2 className="text-lg font-semibold mb-4">Emploi du Temps</h2>
-          {/* Add schedule here */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Emploi du Temps</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {schedule.map((item, index) => (
+                <div key={index} className="flex items-center justify-between p-3 bg-neutral-50 rounded-lg">
+                  <div className="flex items-center gap-4">
+                    <div className="text-sm font-medium text-gray-600">{item.time}</div>
+                    <div>
+                      <div className="font-medium">{item.subject}</div>
+                      <div className="text-sm text-gray-500">Salle {item.room}</div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
         </Card>
-        <Card className="p-6">
-          <h2 className="text-lg font-semibold mb-4">Devoirs</h2>
-          {/* Add assignments here */}
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Devoirs</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {assignments.map((assignment, index) => (
+                <div key={index} className="flex items-center justify-between p-3 bg-neutral-50 rounded-lg">
+                  <div>
+                    <div className="font-medium">{assignment.subject}</div>
+                    <div className="text-sm text-gray-500">{assignment.title}</div>
+                  </div>
+                  <div className="text-right">
+                    <div className="text-sm font-medium text-gray-600">
+                      Pour le {new Date(assignment.due).toLocaleDateString('fr-FR')}
+                    </div>
+                    <div className="text-sm text-gray-500">{assignment.status}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className="mt-6">
+        <Card>
+          <CardHeader>
+            <CardTitle>Calendrier</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Calendar
+              mode="single"
+              selected={date}
+              onSelect={setDate}
+              className="rounded-md border"
+            />
+          </CardContent>
         </Card>
       </div>
     </DashboardLayout>
