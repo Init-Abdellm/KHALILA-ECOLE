@@ -1,6 +1,7 @@
 import DashboardLayout from "@/components/DashboardLayout";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Calendar } from "@/components/ui/calendar";
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
 import { BookOpen, TrendingUp, Clock, Calendar as CalendarIcon } from "lucide-react";
 import { useState } from "react";
 
@@ -20,10 +21,10 @@ const TeacherDashboard = () => {
     { time: "14:00", class: "4ème C", subject: "Mathématiques", room: "C303" },
   ];
 
-  const assignments = [
-    { class: "6ème A", title: "Exercices Chapitre 3", due: "2024-02-20", status: "À noter" },
-    { class: "5ème B", title: "Contrôle continu", due: "2024-02-22", status: "Planifié" },
-    { class: "4ème C", title: "Devoir maison", due: "2024-02-25", status: "En cours" },
+  const recentGrades = [
+    { class: "6ème A", assignment: "Contrôle Continu 1", average: "15.5", date: "2024-02-15" },
+    { class: "5ème B", assignment: "Devoir Maison", average: "14.8", date: "2024-02-14" },
+    { class: "4ème C", assignment: "Évaluation", average: "16.2", date: "2024-02-13" },
   ];
 
   return (
@@ -47,7 +48,7 @@ const TeacherDashboard = () => {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
         <Card>
           <CardHeader>
-            <CardTitle>Emploi du Temps</CardTitle>
+            <CardTitle>Cours à venir</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
@@ -70,25 +71,29 @@ const TeacherDashboard = () => {
 
         <Card>
           <CardHeader>
-            <CardTitle>Devoirs à Noter</CardTitle>
+            <CardTitle>Notes Récentes</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
-              {assignments.map((assignment, index) => (
-                <div key={index} className="flex items-center justify-between p-3 bg-neutral-50 rounded-lg">
-                  <div>
-                    <div className="font-medium">{assignment.class}</div>
-                    <div className="text-sm text-gray-500">{assignment.title}</div>
-                  </div>
-                  <div className="text-right">
-                    <div className="text-sm font-medium text-gray-600">
-                      Pour le {new Date(assignment.due).toLocaleDateString('fr-FR')}
-                    </div>
-                    <div className="text-sm text-gray-500">{assignment.status}</div>
-                  </div>
-                </div>
-              ))}
-            </div>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Classe</TableHead>
+                  <TableHead>Évaluation</TableHead>
+                  <TableHead>Moyenne</TableHead>
+                  <TableHead>Date</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {recentGrades.map((grade, index) => (
+                  <TableRow key={index}>
+                    <TableCell>{grade.class}</TableCell>
+                    <TableCell>{grade.assignment}</TableCell>
+                    <TableCell>{grade.average}</TableCell>
+                    <TableCell>{new Date(grade.date).toLocaleDateString('fr-FR')}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
           </CardContent>
         </Card>
       </div>

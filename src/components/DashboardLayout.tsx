@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { School, LogOut, Menu } from "lucide-react";
+import { School, LogOut, Menu, BookOpen, Users, Calendar, ClipboardList, Bell } from "lucide-react";
+import { Link, useLocation } from "react-router-dom";
 import { useState } from "react";
 
 interface DashboardLayoutProps {
@@ -11,6 +12,17 @@ interface DashboardLayoutProps {
 
 const DashboardLayout = ({ children, title, role }: DashboardLayoutProps) => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const location = useLocation();
+
+  const teacherNavItems = [
+    { icon: BookOpen, label: "Mes Cours", path: "/teacher/courses" },
+    { icon: Users, label: "Mes Élèves", path: "/teacher/students" },
+    { icon: Calendar, label: "Emploi du temps", path: "/teacher/schedule" },
+    { icon: ClipboardList, label: "Notes", path: "/teacher/grades" },
+    { icon: Bell, label: "Notifications", path: "/teacher/notifications" },
+  ];
+
+  const isActive = (path: string) => location.pathname === path;
 
   return (
     <div className="min-h-screen bg-background">
@@ -30,8 +42,18 @@ const DashboardLayout = ({ children, title, role }: DashboardLayoutProps) => {
           <Menu className="h-4 w-4" />
         </Button>
 
-        <div className="mt-8 px-4">
-          {/* Add navigation items here based on role */}
+        <div className="mt-8 px-4 space-y-2">
+          {role === "Professeur" && teacherNavItems.map((item) => (
+            <Link key={item.path} to={item.path}>
+              <Button
+                variant={isActive(item.path) ? "secondary" : "ghost"}
+                className={`w-full justify-start ${!isSidebarOpen ? 'px-2' : ''}`}
+              >
+                <item.icon className="h-4 w-4" />
+                {isSidebarOpen && <span className="ml-2">{item.label}</span>}
+              </Button>
+            </Link>
+          ))}
         </div>
       </div>
 
