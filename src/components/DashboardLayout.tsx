@@ -27,7 +27,7 @@ const DashboardLayout = ({ children, title, role }: DashboardLayoutProps) => {
   return (
     <div className="min-h-screen bg-background">
       {/* Sidebar */}
-      <div className={`fixed top-0 left-0 h-full bg-neutral-100 shadow-lg transition-all duration-300 ${isSidebarOpen ? 'w-64' : 'w-20'}`}>
+      <div className={`fixed top-0 left-0 h-full bg-neutral-100 shadow-lg transition-all duration-300 z-50 ${isSidebarOpen ? 'w-64' : 'w-20'}`}>
         <div className="p-4 flex items-center gap-3">
           <School className="text-primary w-8 h-8" />
           {isSidebarOpen && <span className="text-xl font-bold text-primary">Khalilia</span>}
@@ -36,7 +36,7 @@ const DashboardLayout = ({ children, title, role }: DashboardLayoutProps) => {
         <Button
           variant="ghost"
           size="icon"
-          className="absolute right-[-20px] top-4"
+          className="absolute right-[-20px] top-4 z-50"
           onClick={() => setIsSidebarOpen(!isSidebarOpen)}
         >
           <Menu className="h-4 w-4" />
@@ -44,13 +44,18 @@ const DashboardLayout = ({ children, title, role }: DashboardLayoutProps) => {
 
         <div className="mt-8 px-4 space-y-2">
           {role === "Professeur" && teacherNavItems.map((item) => (
-            <Link key={item.path} to={item.path}>
+            <Link 
+              key={item.path} 
+              to={item.path}
+              className="block w-full"
+            >
               <Button
                 variant={isActive(item.path) ? "secondary" : "ghost"}
                 className={`w-full justify-start ${!isSidebarOpen ? 'px-2' : ''}`}
+                type="button"
               >
-                <item.icon className="h-4 w-4" />
-                {isSidebarOpen && <span className="ml-2">{item.label}</span>}
+                <item.icon className="h-4 w-4 shrink-0" />
+                {isSidebarOpen && <span className="ml-2 truncate">{item.label}</span>}
               </Button>
             </Link>
           ))}
@@ -67,9 +72,9 @@ const DashboardLayout = ({ children, title, role }: DashboardLayoutProps) => {
             </div>
             <div className="flex items-center gap-4">
               <div className="flex gap-2">
-                <button className="text-sm text-gray-600 hover:text-primary">FR</button>
-                <button className="text-sm text-gray-600 hover:text-primary">عربي</button>
-                <button className="text-sm text-gray-600 hover:text-primary">EN</button>
+                <Button variant="ghost" size="sm" className="text-sm text-gray-600 hover:text-primary">FR</Button>
+                <Button variant="ghost" size="sm" className="text-sm text-gray-600 hover:text-primary">عربي</Button>
+                <Button variant="ghost" size="sm" className="text-sm text-gray-600 hover:text-primary">EN</Button>
               </div>
               <Button variant="ghost" size="icon">
                 <LogOut className="h-4 w-4" />
