@@ -8,6 +8,11 @@ import AdminDashboard from "./pages/admin/Dashboard";
 import DirectorDashboard from "./pages/director/Dashboard";
 import TeacherDashboard from "./pages/teacher/Dashboard";
 import StudentDashboard from "./pages/student/Dashboard";
+import TeacherCourses from "./pages/teacher/Courses";
+import TeacherStudents from "./pages/teacher/Students";
+import TeacherSchedule from "./pages/teacher/Schedule";
+import TeacherGrades from "./pages/teacher/Grades";
+import TeacherNotifications from "./pages/teacher/Notifications";
 
 const queryClient = new QueryClient();
 
@@ -19,10 +24,23 @@ const App = () => (
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Index />} />
-          <Route path="/admin/*" element={<AdminDashboard />} />
-          <Route path="/director/*" element={<DirectorDashboard />} />
-          <Route path="/teacher/*" element={<TeacherDashboard />} />
-          <Route path="/student/*" element={<StudentDashboard />} />
+          
+          {/* Admin Routes */}
+          <Route path="/admin" element={<AdminDashboard />} />
+          
+          {/* Director Routes */}
+          <Route path="/director" element={<DirectorDashboard />} />
+          
+          {/* Teacher Routes */}
+          <Route path="/teacher" element={<TeacherDashboard />} />
+          <Route path="/teacher/courses" element={<TeacherCourses />} />
+          <Route path="/teacher/students" element={<TeacherStudents />} />
+          <Route path="/teacher/schedule" element={<TeacherSchedule />} />
+          <Route path="/teacher/grades" element={<TeacherGrades />} />
+          <Route path="/teacher/notifications" element={<TeacherNotifications />} />
+          
+          {/* Student Routes */}
+          <Route path="/student" element={<StudentDashboard />} />
         </Routes>
       </BrowserRouter>
     </TooltipProvider>
