@@ -1,58 +1,11 @@
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import {
-  Carousel,
-  CarouselContent,
-  CarouselItem,
-  CarouselNext,
-  CarouselPrevious,
-} from "@/components/ui/carousel";
-import { School, GraduationCap, BookOpen, Calendar, Users, ArrowRight } from "lucide-react";
+import { School } from "lucide-react";
 import { Link } from "react-router-dom";
-import { motion } from "framer-motion";
+import Hero from "@/components/landing/Hero";
+import Features from "@/components/landing/Features";
+import News from "@/components/landing/News";
+import SubscriptionForm from "@/components/landing/SubscriptionForm";
 
 const Landing = () => {
-  const features = [
-    {
-      icon: GraduationCap,
-      title: "Excellence Académique",
-      description: "Programme d'études complet et innovant",
-    },
-    {
-      icon: Users,
-      title: "Corps Enseignant Qualifié",
-      description: "Professeurs expérimentés et dévoués",
-    },
-    {
-      icon: Calendar,
-      title: "Activités Parascolaires",
-      description: "Large choix d'activités culturelles et sportives",
-    },
-    {
-      icon: BookOpen,
-      title: "Ressources Modernes",
-      description: "Équipements et outils pédagogiques de pointe",
-    },
-  ];
-
-  const news = [
-    {
-      title: "Journée Portes Ouvertes",
-      date: "15 Mars 2024",
-      image: "https://images.unsplash.com/photo-1605810230434-7631ac76ec81",
-    },
-    {
-      title: "Concours de Sciences",
-      date: "20 Mars 2024",
-      image: "https://images.unsplash.com/photo-1488590528505-98d2b5aba04b",
-    },
-    {
-      title: "Spectacle de Fin d'Année",
-      date: "30 Juin 2024",
-      image: "https://images.unsplash.com/photo-1519389950473-47ba0277781c",
-    },
-  ];
-
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-neutral-200">
       {/* Header */}
@@ -63,89 +16,24 @@ const Landing = () => {
               <School className="h-8 w-8 text-primary" />
               <h1 className="text-2xl font-bold text-gray-900">École Khalilia</h1>
             </div>
-            <Link to="/login">
-              <Button>
-                Espace Connecté
-                <ArrowRight className="ml-2 h-4 w-4" />
-              </Button>
-            </Link>
           </div>
         </div>
       </header>
 
-      {/* Hero Section */}
-      <section className="relative py-20 overflow-hidden">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-            className="text-center"
-          >
-            <h1 className="text-4xl md:text-6xl font-bold text-gray-900 mb-6">
-              Bienvenue à l'École Khalilia
-            </h1>
-            <p className="text-xl text-gray-600 max-w-3xl mx-auto mb-8">
-              Une éducation d'excellence pour préparer les leaders de demain
-            </p>
-            <Link to="/login">
-              <Button size="lg" className="text-lg">
-                Rejoignez-nous
-                <ArrowRight className="ml-2" />
-              </Button>
-            </Link>
-          </motion.div>
-        </div>
-      </section>
+      <Hero />
+      <Features />
+      <News />
 
-      {/* Features Section */}
+      {/* Subscription Form Section */}
       <section className="py-16 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="text-3xl font-bold text-center mb-12">Nos Points Forts</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-            {features.map((feature, index) => (
-              <motion.div
-                key={index}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: index * 0.1 }}
-              >
-                <Card className="p-6 text-center hover:shadow-lg transition-shadow">
-                  <feature.icon className="w-12 h-12 mx-auto text-primary mb-4" />
-                  <h3 className="text-xl font-semibold mb-2">{feature.title}</h3>
-                  <p className="text-gray-600">{feature.description}</p>
-                </Card>
-              </motion.div>
-            ))}
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+          <h2 className="text-3xl font-bold text-center mb-8">Inscription</h2>
+          <p className="text-center text-gray-600 mb-12">
+            Inscrivez votre enfant dans notre établissement en remplissant le formulaire ci-dessous
+          </p>
+          <div className="bg-neutral-50 p-6 rounded-lg shadow-lg">
+            <SubscriptionForm />
           </div>
-        </div>
-      </section>
-
-      {/* News & Events Section */}
-      <section className="py-16 bg-neutral-100">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="text-3xl font-bold text-center mb-12">Actualités et Événements</h2>
-          <Carousel className="w-full max-w-5xl mx-auto">
-            <CarouselContent>
-              {news.map((item, index) => (
-                <CarouselItem key={index}>
-                  <Card className="overflow-hidden">
-                    <img
-                      src={item.image}
-                      alt={item.title}
-                      className="w-full h-64 object-cover"
-                    />
-                    <div className="p-6">
-                      <h3 className="text-xl font-semibold mb-2">{item.title}</h3>
-                      <p className="text-gray-600">{item.date}</p>
-                    </div>
-                  </Card>
-                </CarouselItem>
-              ))}
-            </CarouselContent>
-            <CarouselPrevious />
-            <CarouselNext />
-          </Carousel>
         </div>
       </section>
 
