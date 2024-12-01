@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { School, LogOut, Menu, BookOpen, Users, Calendar, ClipboardList, Bell, Home, Settings, FileText, GraduationCap } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useProfile } from "@/lib/auth";
 import { toast } from "@/components/ui/use-toast";
@@ -15,9 +15,47 @@ interface DashboardLayoutProps {
 
 const DashboardLayout = ({ children, title, role }: DashboardLayoutProps) => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [unreadNotifications, setUnreadNotifications] = useState(0);
   const location = useLocation();
   const navigate = useNavigate();
   const { profile } = useProfile();
+
+  useEffect(() => {
+    if (!profile?.id) return;
+
+    const fetchUnreadNotifications = async () => {
+      const { count } = await supabase
+        .from('notifications')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', profile.id)
+        .eq('read', false);
+
+      setUnreadNotifications(count || 0);
+    };
+
+    fetchUnreadNotifications();
+
+    // Subscribe to real-time notifications
+    const channel = supabase
+      .channel('notifications')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'notifications',
+          filter: `user_id=eq.${profile.id}`,
+        },
+        () => {
+          fetchUnreadNotifications();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [profile?.id]);
 
   const handleLogout = async () => {
     try {
@@ -113,7 +151,16 @@ const DashboardLayout = ({ children, title, role }: DashboardLayoutProps) => {
                 type="button"
               >
                 <item.icon className="h-4 w-4 shrink-0" />
-                {isSidebarOpen && <span className="ml-2 truncate">{item.label}</span>}
+                {isSidebarOpen && (
+                  <>
+                    <span className="ml-2 truncate">{item.label}</span>
+                    {item.path.includes('notifications') && unreadNotifications > 0 && (
+                      <span className="ml-2 bg-primary text-white text-xs px-2 py-1 rounded-full">
+                        {unreadNotifications}
+                      </span>
+                    )}
+                  </>
+                )}
               </Button>
             </Link>
           ))}

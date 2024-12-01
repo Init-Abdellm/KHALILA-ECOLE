@@ -1,6 +1,15 @@
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { toast } from "@/components/ui/use-toast";
+
+export interface Profile {
+  id: string;
+  first_name: string | null;
+  last_name: string | null;
+  role: string | null;
+  created_at: string;
+}
 
 export const useAuth = () => {
   const [user, setUser] = useState(null);
@@ -34,7 +43,7 @@ export const useRequireAuth = (redirectTo = '/login') => {
 
 export const useProfile = () => {
   const { user } = useAuth();
-  const [profile, setProfile] = useState(null);
+  const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -45,16 +54,25 @@ export const useProfile = () => {
         return;
       }
 
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', user.id)
-        .single();
+      try {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', user.id)
+          .single();
 
-      if (!error && data) {
+        if (error) throw error;
+
         setProfile(data);
+      } catch (error: any) {
+        toast({
+          title: "Erreur",
+          description: "Impossible de charger votre profil.",
+          variant: "destructive",
+        });
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     };
 
     fetchProfile();

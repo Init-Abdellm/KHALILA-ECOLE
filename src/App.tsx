@@ -3,7 +3,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import { useAuth } from "@/lib/auth";
+import { useAuth, useProfile } from "@/lib/auth";
 import Landing from "./pages/Landing";
 import Login from "./pages/Login";
 import AdminDashboard from "./pages/admin/Dashboard";
@@ -27,13 +27,18 @@ const queryClient = new QueryClient();
 
 const ProtectedRoute = ({ children, allowedRoles = [] }: { children: React.ReactNode, allowedRoles?: string[] }) => {
   const { user, loading } = useAuth();
+  const { profile, loading: profileLoading } = useProfile();
   
-  if (loading) {
+  if (loading || profileLoading) {
     return <div>Loading...</div>;
   }
   
   if (!user) {
     return <Navigate to="/login" />;
+  }
+
+  if (allowedRoles.length > 0 && (!profile?.role || !allowedRoles.includes(profile.role))) {
+    return <Navigate to="/" />;
   }
   
   return <>{children}</>;
