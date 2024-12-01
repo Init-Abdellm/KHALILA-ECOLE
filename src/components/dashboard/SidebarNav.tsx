@@ -1,6 +1,7 @@
 import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Home, BookOpen, Users, Calendar, ClipboardList, Bell, Settings, FileText, GraduationCap } from "lucide-react";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface NavItem {
   icon: any;
@@ -16,6 +17,7 @@ interface SidebarNavProps {
 
 export const SidebarNav = ({ role, isSidebarOpen, unreadNotifications }: SidebarNavProps) => {
   const location = useLocation();
+  const isMobile = useIsMobile();
   
   const teacherNavItems: NavItem[] = [
     { icon: Home, label: "Tableau de bord", path: "/teacher" },
@@ -67,7 +69,7 @@ export const SidebarNav = ({ role, isSidebarOpen, unreadNotifications }: Sidebar
   const isActive = (path: string) => location.pathname === path;
 
   return (
-    <div className="mt-8 px-4 space-y-2">
+    <div className="mt-6 px-3 md:px-4 space-y-1 md:space-y-2">
       {getNavItems().map((item) => (
         <Link 
           key={item.path} 
@@ -76,13 +78,13 @@ export const SidebarNav = ({ role, isSidebarOpen, unreadNotifications }: Sidebar
         >
           <Button
             variant={isActive(item.path) ? "secondary" : "ghost"}
-            className={`w-full justify-start ${!isSidebarOpen ? 'px-2' : ''}`}
-            type="button"
+            className={`w-full justify-start ${!isSidebarOpen && !isMobile ? 'px-2' : ''}`}
+            size={isMobile ? "default" : "sm"}
           >
             <item.icon className="h-4 w-4 shrink-0" />
             {isSidebarOpen && (
               <>
-                <span className="ml-2 truncate">{item.label}</span>
+                <span className="ml-2 truncate text-sm">{item.label}</span>
                 {item.path.includes('notifications') && unreadNotifications > 0 && (
                   <span className="ml-2 bg-primary text-white text-xs px-2 py-1 rounded-full">
                     {unreadNotifications}

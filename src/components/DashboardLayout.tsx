@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useProfile } from "@/lib/auth";
 import { Header } from "./dashboard/Header";
 import { Sidebar } from "./dashboard/Sidebar";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -11,9 +12,14 @@ interface DashboardLayoutProps {
 }
 
 const DashboardLayout = ({ children, title, role }: DashboardLayoutProps) => {
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const isMobile = useIsMobile();
+  const [isSidebarOpen, setIsSidebarOpen] = useState(!isMobile);
   const [unreadNotifications, setUnreadNotifications] = useState(0);
   const { profile } = useProfile();
+
+  useEffect(() => {
+    setIsSidebarOpen(!isMobile);
+  }, [isMobile]);
 
   useEffect(() => {
     if (!profile?.id) return;
@@ -60,9 +66,23 @@ const DashboardLayout = ({ children, title, role }: DashboardLayoutProps) => {
         unreadNotifications={unreadNotifications}
       />
 
-      <div className={`transition-all duration-300 ${isSidebarOpen ? 'ml-64' : 'ml-20'}`}>
-        <Header title={title} role={role} profile={profile} />
-        <main className="p-6">
+      <div 
+        className={`transition-all duration-300 ${
+          isSidebarOpen 
+            ? isMobile 
+              ? 'ml-0' 
+              : 'ml-64' 
+            : 'ml-0 md:ml-20'
+        }`}
+      >
+        <Header 
+          title={title} 
+          role={role} 
+          profile={profile}
+          isSidebarOpen={isSidebarOpen}
+          setIsSidebarOpen={setIsSidebarOpen}
+        />
+        <main className="p-4 md:p-6">
           {children}
         </main>
       </div>

@@ -1,18 +1,22 @@
 import { Button } from "@/components/ui/button";
-import { LogOut } from "lucide-react";
+import { LogOut, Menu } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/use-toast";
 import { Profile } from "@/lib/auth";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface HeaderProps {
   title: string;
   role: string;
   profile: Profile | null;
+  isSidebarOpen: boolean;
+  setIsSidebarOpen: (open: boolean) => void;
 }
 
-export const Header = ({ title, role, profile }: HeaderProps) => {
+export const Header = ({ title, role, profile, isSidebarOpen, setIsSidebarOpen }: HeaderProps) => {
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
 
   const handleLogout = async () => {
     try {
@@ -29,16 +33,28 @@ export const Header = ({ title, role, profile }: HeaderProps) => {
   };
 
   return (
-    <header className="bg-white shadow-sm">
-      <div className="px-6 py-4 flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-800">{title}</h1>
-          <p className="text-sm text-gray-600">
-            {profile?.first_name} {profile?.last_name} - {role}
-          </p>
+    <header className="bg-white shadow-sm sticky top-0 z-30">
+      <div className="px-4 py-3 md:px-6 md:py-4 flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          {isMobile && (
+            <Button
+              variant="ghost"
+              size="icon"
+              className="md:hidden"
+              onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+            >
+              <Menu className="h-5 w-5" />
+            </Button>
+          )}
+          <div>
+            <h1 className="text-xl md:text-2xl font-bold text-gray-800">{title}</h1>
+            <p className="text-xs md:text-sm text-gray-600">
+              {profile?.first_name} {profile?.last_name} - {role}
+            </p>
+          </div>
         </div>
-        <div className="flex items-center gap-4">
-          <div className="flex gap-2">
+        <div className="flex items-center gap-2 md:gap-4">
+          <div className="hidden md:flex gap-2">
             <Button variant="ghost" size="sm" className="text-sm text-gray-600 hover:text-primary">FR</Button>
             <Button variant="ghost" size="sm" className="text-sm text-gray-600 hover:text-primary">عربي</Button>
             <Button variant="ghost" size="sm" className="text-sm text-gray-600 hover:text-primary">EN</Button>
