@@ -5,6 +5,17 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 
+interface BlogPost {
+  id: string;
+  title: string;
+  content: string;
+  published_at: string;
+  profiles: {
+    first_name: string | null;
+    last_name: string | null;
+  } | null;
+}
+
 const Blog = () => {
   const { data: blogs, isLoading } = useQuery({
     queryKey: ["blogs"],
@@ -13,7 +24,7 @@ const Blog = () => {
         .from("blogs")
         .select(`
           *,
-          profiles:author_id (
+          profiles (
             first_name,
             last_name
           )
@@ -21,7 +32,7 @@ const Blog = () => {
         .order("published_at", { ascending: false });
 
       if (error) throw error;
-      return data;
+      return data as BlogPost[];
     },
   });
 

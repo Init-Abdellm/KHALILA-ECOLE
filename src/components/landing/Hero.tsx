@@ -20,12 +20,16 @@ const Hero = () => {
             Une éducation d'excellence pour préparer les leaders de demain
           </p>
           <div className="flex justify-center gap-4">
-            <Link to="/login">
-              <Button size="lg" className="text-lg">
-                Espace Connecté
+            <Button
+              asChild
+              size="lg"
+              className="text-lg bg-primary hover:bg-primary/90 text-white"
+            >
+              <Link to="/blog">
+                Découvrir Notre Blog
                 <ArrowRight className="ml-2" />
-              </Button>
-            </Link>
+              </Link>
+            </Button>
           </div>
         </motion.div>
       </div>
