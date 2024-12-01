@@ -3,9 +3,11 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import { useAuth, useProfile, getRoleLabel } from "@/lib/auth";
+import { useAuth, useProfile } from "@/lib/auth";
 import { toast } from "@/components/ui/use-toast";
 import Landing from "./pages/Landing";
+import Blog from "./pages/Blog";
+import Events from "./pages/Events";
 import Login from "./pages/Login";
 import AdminDashboard from "./pages/admin/Dashboard";
 import AdminUsers from "./pages/admin/Users";
@@ -62,6 +64,8 @@ const App = () => (
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Landing />} />
+          <Route path="/blog" element={<Blog />} />
+          <Route path="/events" element={<Events />} />
           <Route path="/login" element={<Login />} />
           
           {/* Admin Routes */}

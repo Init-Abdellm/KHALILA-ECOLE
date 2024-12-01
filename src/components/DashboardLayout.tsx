@@ -4,6 +4,7 @@ import { useProfile } from "@/lib/auth";
 import { Header } from "./dashboard/Header";
 import { Sidebar } from "./dashboard/Sidebar";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { Card } from "./ui/card";
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -83,7 +84,9 @@ const DashboardLayout = ({ children, title, role }: DashboardLayoutProps) => {
           setIsSidebarOpen={setIsSidebarOpen}
         />
         <main className="p-4 md:p-6">
-          {children}
+          <Card className="p-6 shadow-sm">
+            {children}
+          </Card>
         </main>
       </div>
     </div>
