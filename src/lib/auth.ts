@@ -28,19 +28,6 @@ export const useAuth = () => {
   return { user, loading };
 };
 
-export const useRequireAuth = (redirectTo = '/login') => {
-  const { user, loading } = useAuth();
-  const navigate = useNavigate();
-
-  useEffect(() => {
-    if (!loading && !user) {
-      navigate(redirectTo);
-    }
-  }, [user, loading, navigate, redirectTo]);
-
-  return { user, loading };
-};
-
 export const useProfile = () => {
   const { user } = useAuth();
   const [profile, setProfile] = useState<Profile | null>(null);
@@ -79,4 +66,32 @@ export const useProfile = () => {
   }, [user]);
 
   return { profile, loading };
+};
+
+export const useRequireAuth = (redirectTo = '/login') => {
+  const { user, loading } = useAuth();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!loading && !user) {
+      navigate(redirectTo);
+    }
+  }, [user, loading, navigate, redirectTo]);
+
+  return { user, loading };
+};
+
+export const getRoleLabel = (role: string | null): string => {
+  switch (role) {
+    case 'admin':
+      return 'Administration';
+    case 'director':
+      return 'Direction';
+    case 'teacher':
+      return 'Professeur';
+    case 'student':
+      return 'Étudiant';
+    default:
+      return '';
+  }
 };

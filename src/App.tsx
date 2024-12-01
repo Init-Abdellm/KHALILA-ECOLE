@@ -3,7 +3,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import { useAuth, useProfile } from "@/lib/auth";
+import { useAuth, useProfile, getRoleLabel } from "@/lib/auth";
 import Landing from "./pages/Landing";
 import Login from "./pages/Login";
 import AdminDashboard from "./pages/admin/Dashboard";
@@ -30,7 +30,11 @@ const ProtectedRoute = ({ children, allowedRoles = [] }: { children: React.React
   const { profile, loading: profileLoading } = useProfile();
   
   if (loading || profileLoading) {
-    return <div>Loading...</div>;
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
+      </div>
+    );
   }
   
   if (!user) {
@@ -38,6 +42,11 @@ const ProtectedRoute = ({ children, allowedRoles = [] }: { children: React.React
   }
 
   if (allowedRoles.length > 0 && (!profile?.role || !allowedRoles.includes(profile.role))) {
+    toast({
+      title: "Accès refusé",
+      description: "Vous n'avez pas les permissions nécessaires pour accéder à cette page.",
+      variant: "destructive",
+    });
     return <Navigate to="/" />;
   }
   
