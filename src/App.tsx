@@ -2,7 +2,8 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { useAuth } from "@/lib/auth";
 import Landing from "./pages/Landing";
 import Login from "./pages/Login";
 import AdminDashboard from "./pages/admin/Dashboard";
@@ -24,6 +25,20 @@ import StudentGrades from "./pages/student/Grades";
 
 const queryClient = new QueryClient();
 
+const ProtectedRoute = ({ children, allowedRoles = [] }: { children: React.ReactNode, allowedRoles?: string[] }) => {
+  const { user, loading } = useAuth();
+  
+  if (loading) {
+    return <div>Loading...</div>;
+  }
+  
+  if (!user) {
+    return <Navigate to="/login" />;
+  }
+  
+  return <>{children}</>;
+};
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
@@ -35,28 +50,28 @@ const App = () => (
           <Route path="/login" element={<Login />} />
           
           {/* Admin Routes */}
-          <Route path="/admin" element={<AdminDashboard />} />
-          <Route path="/admin/users" element={<AdminUsers />} />
-          <Route path="/admin/settings" element={<AdminSettings />} />
-          <Route path="/admin/notifications" element={<AdminNotifications />} />
+          <Route path="/admin" element={<ProtectedRoute allowedRoles={['admin']}><AdminDashboard /></ProtectedRoute>} />
+          <Route path="/admin/users" element={<ProtectedRoute allowedRoles={['admin']}><AdminUsers /></ProtectedRoute>} />
+          <Route path="/admin/settings" element={<ProtectedRoute allowedRoles={['admin']}><AdminSettings /></ProtectedRoute>} />
+          <Route path="/admin/notifications" element={<ProtectedRoute allowedRoles={['admin']}><AdminNotifications /></ProtectedRoute>} />
           
           {/* Director Routes */}
-          <Route path="/director" element={<DirectorDashboard />} />
-          <Route path="/director/classes" element={<DirectorClasses />} />
+          <Route path="/director" element={<ProtectedRoute allowedRoles={['director']}><DirectorDashboard /></ProtectedRoute>} />
+          <Route path="/director/classes" element={<ProtectedRoute allowedRoles={['director']}><DirectorClasses /></ProtectedRoute>} />
           
           {/* Teacher Routes */}
-          <Route path="/teacher" element={<TeacherDashboard />} />
-          <Route path="/teacher/courses" element={<TeacherCourses />} />
-          <Route path="/teacher/students" element={<TeacherStudents />} />
-          <Route path="/teacher/schedule" element={<TeacherSchedule />} />
-          <Route path="/teacher/grades" element={<TeacherGrades />} />
-          <Route path="/teacher/notifications" element={<TeacherNotifications />} />
+          <Route path="/teacher" element={<ProtectedRoute allowedRoles={['teacher']}><TeacherDashboard /></ProtectedRoute>} />
+          <Route path="/teacher/courses" element={<ProtectedRoute allowedRoles={['teacher']}><TeacherCourses /></ProtectedRoute>} />
+          <Route path="/teacher/students" element={<ProtectedRoute allowedRoles={['teacher']}><TeacherStudents /></ProtectedRoute>} />
+          <Route path="/teacher/schedule" element={<ProtectedRoute allowedRoles={['teacher']}><TeacherSchedule /></ProtectedRoute>} />
+          <Route path="/teacher/grades" element={<ProtectedRoute allowedRoles={['teacher']}><TeacherGrades /></ProtectedRoute>} />
+          <Route path="/teacher/notifications" element={<ProtectedRoute allowedRoles={['teacher']}><TeacherNotifications /></ProtectedRoute>} />
           
           {/* Student Routes */}
-          <Route path="/student" element={<StudentDashboard />} />
-          <Route path="/student/courses" element={<StudentCourses />} />
-          <Route path="/student/schedule" element={<StudentSchedule />} />
-          <Route path="/student/grades" element={<StudentGrades />} />
+          <Route path="/student" element={<ProtectedRoute allowedRoles={['student']}><StudentDashboard /></ProtectedRoute>} />
+          <Route path="/student/courses" element={<ProtectedRoute allowedRoles={['student']}><StudentCourses /></ProtectedRoute>} />
+          <Route path="/student/schedule" element={<ProtectedRoute allowedRoles={['student']}><StudentSchedule /></ProtectedRoute>} />
+          <Route path="/student/grades" element={<ProtectedRoute allowedRoles={['student']}><StudentGrades /></ProtectedRoute>} />
         </Routes>
       </BrowserRouter>
     </TooltipProvider>

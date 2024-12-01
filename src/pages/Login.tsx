@@ -1,81 +1,69 @@
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { School, ChevronRight, Users, GraduationCap, BookOpen } from "lucide-react";
+import { Auth } from "@supabase/auth-ui-react";
+import { supabase } from "@/integrations/supabase/client";
+import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
+import { School } from "lucide-react";
 
-const Index = () => {
+const Login = () => {
   const navigate = useNavigate();
 
-  const roles = [
-    { title: "Administration", path: "/admin", icon: Users, description: "Gérez l'établissement et les utilisateurs" },
-    { title: "Direction", path: "/director", icon: GraduationCap, description: "Supervisez les activités pédagogiques" },
-    { title: "Enseignants", path: "/teacher", icon: BookOpen, description: "Gérez vos cours et vos élèves" },
-    { title: "Étudiants & Parents", path: "/student", icon: School, description: "Suivez votre parcours scolaire" },
-  ];
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (session?.user) {
+        navigate('/');
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, [navigate]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background to-neutral-200 p-4">
-      <div className="max-w-6xl mx-auto">
-        {/* Hero Section */}
-        <div className="text-center py-12 md:py-20">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-            className="flex flex-col items-center"
-          >
-            <div className="flex items-center justify-center space-x-3 mb-6">
-              <School className="w-12 h-12 md:w-16 md:h-16 text-primary" />
-              <h1 className="text-4xl md:text-6xl font-bold text-primary">Khalilia</h1>
-            </div>
-            <p className="text-xl md:text-2xl text-gray-600 max-w-2xl mx-auto mb-8">
-              Plateforme de gestion scolaire innovante pour une éducation moderne
-            </p>
-          </motion.div>
-
-          {/* Role Selection */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-12">
-            {roles.map((role, index) => (
-              <motion.div
-                key={role.path}
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.5, delay: index * 0.1 }}
-              >
-                <Card 
-                  className="p-6 hover:shadow-lg transition-all cursor-pointer group"
-                  onClick={() => navigate(role.path)}
-                >
-                  <div className="flex items-start space-x-4">
-                    <div className="p-3 rounded-full bg-primary/10">
-                      <role.icon className="w-6 h-6 text-primary" />
-                    </div>
-                    <div className="flex-1">
-                      <h3 className="text-xl font-semibold mb-2 group-hover:text-primary transition-colors">
-                        {role.title}
-                      </h3>
-                      <p className="text-gray-600">{role.description}</p>
-                    </div>
-                    <ChevronRight className="w-5 h-5 text-gray-400 group-hover:text-primary transition-colors" />
-                  </div>
-                </Card>
-              </motion.div>
-            ))}
+    <div className="min-h-screen bg-gradient-to-b from-background to-neutral-200 flex items-center justify-center p-4">
+      <div className="w-full max-w-md">
+        <div className="mb-8 text-center">
+          <div className="flex items-center justify-center mb-4">
+            <School className="h-12 w-12 text-primary" />
+            <h1 className="text-4xl font-bold text-primary ml-2">Khalilia</h1>
           </div>
+          <p className="text-gray-600">Connectez-vous à votre compte</p>
         </div>
-
-        {/* Language Selection */}
-        <div className="fixed bottom-8 left-1/2 transform -translate-x-1/2">
-          <Card className="p-2 flex space-x-2">
-            <Button variant="ghost" size="sm">Français</Button>
-            <Button variant="ghost" size="sm">العربية</Button>
-            <Button variant="ghost" size="sm">English</Button>
-          </Card>
+        
+        <div className="bg-white p-8 rounded-lg shadow-lg">
+          <Auth
+            supabaseClient={supabase}
+            appearance={{
+              theme: 'light',
+              style: {
+                button: {
+                  background: 'rgb(147 51 234)',
+                  borderRadius: '0.5rem',
+                  color: 'white',
+                },
+                anchor: {
+                  color: 'rgb(147 51 234)',
+                },
+              },
+            }}
+            providers={[]}
+            localization={{
+              variables: {
+                sign_in: {
+                  email_label: 'Email',
+                  password_label: 'Mot de passe',
+                  button_label: 'Se connecter',
+                },
+                sign_up: {
+                  email_label: 'Email',
+                  password_label: 'Mot de passe',
+                  button_label: "S'inscrire",
+                },
+              },
+            }}
+          />
         </div>
       </div>
     </div>
   );
 };
 
-export default Index;
+export default Login;

@@ -1,8 +1,11 @@
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { School, LogOut, Menu, BookOpen, Users, Calendar, ClipboardList, Bell, Home, Settings, FileText, GraduationCap } from "lucide-react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { useProfile } from "@/lib/auth";
+import { toast } from "@/components/ui/use-toast";
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -13,6 +16,22 @@ interface DashboardLayoutProps {
 const DashboardLayout = ({ children, title, role }: DashboardLayoutProps) => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const location = useLocation();
+  const navigate = useNavigate();
+  const { profile } = useProfile();
+
+  const handleLogout = async () => {
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
+      navigate('/login');
+    } catch (error) {
+      toast({
+        title: "Erreur",
+        description: "Une erreur est survenue lors de la déconnexion.",
+        variant: "destructive",
+      });
+    }
+  };
 
   const teacherNavItems = [
     { icon: Home, label: "Tableau de bord", path: "/teacher" },
@@ -107,7 +126,9 @@ const DashboardLayout = ({ children, title, role }: DashboardLayoutProps) => {
           <div className="px-6 py-4 flex items-center justify-between">
             <div>
               <h1 className="text-2xl font-bold text-gray-800">{title}</h1>
-              <p className="text-sm text-gray-600">{role}</p>
+              <p className="text-sm text-gray-600">
+                {profile?.first_name} {profile?.last_name} - {role}
+              </p>
             </div>
             <div className="flex items-center gap-4">
               <div className="flex gap-2">
@@ -115,7 +136,7 @@ const DashboardLayout = ({ children, title, role }: DashboardLayoutProps) => {
                 <Button variant="ghost" size="sm" className="text-sm text-gray-600 hover:text-primary">عربي</Button>
                 <Button variant="ghost" size="sm" className="text-sm text-gray-600 hover:text-primary">EN</Button>
               </div>
-              <Button variant="ghost" size="icon">
+              <Button variant="ghost" size="icon" onClick={handleLogout}>
                 <LogOut className="h-4 w-4" />
               </Button>
             </div>

@@ -13,6 +13,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "@/components/ui/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 const formSchema = z.object({
   parentName: z.string().min(2, "Le nom doit contenir au moins 2 caractères"),
@@ -41,13 +42,31 @@ const SubscriptionForm = () => {
   });
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
-    // Here you would typically send the data to your backend
-    console.log(values);
-    toast({
-      title: "Formulaire envoyé",
-      description: "Nous vous contacterons bientôt.",
-    });
-    form.reset();
+    try {
+      const { error } = await supabase.from('subscription_forms').insert([{
+        parent_name: values.parentName,
+        parent_email: values.parentEmail,
+        parent_phone: values.parentPhone,
+        child_name: values.childName,
+        child_age: parseInt(values.childAge),
+        current_school: values.currentSchool || null,
+        message: values.message || null,
+      }]);
+
+      if (error) throw error;
+
+      toast({
+        title: "Formulaire envoyé",
+        description: "Nous vous contacterons bientôt.",
+      });
+      form.reset();
+    } catch (error) {
+      toast({
+        title: "Erreur",
+        description: "Une erreur est survenue lors de l'envoi du formulaire.",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
