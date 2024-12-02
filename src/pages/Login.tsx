@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,12 +7,23 @@ import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { toast } from "@/components/ui/use-toast";
 import { School } from "lucide-react";
+import { useAuth } from "@/lib/auth";
 
 const Login = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const { user } = useAuth();
   const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+
+  // Redirect if user is already logged in
+  useEffect(() => {
+    if (user) {
+      const from = location.state?.from?.pathname || "/";
+      navigate(from, { replace: true });
+    }
+  }, [user, navigate, location]);
 
   const handleResendConfirmation = async () => {
     try {
@@ -63,30 +74,7 @@ const Login = () => {
         throw error;
       }
 
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('role')
-        .eq('id', (await supabase.auth.getUser()).data.user?.id)
-        .single();
-
-      if (profile) {
-        switch (profile.role) {
-          case 'admin':
-            navigate('/admin');
-            break;
-          case 'director':
-            navigate('/director');
-            break;
-          case 'teacher':
-            navigate('/teacher');
-            break;
-          case 'student':
-            navigate('/student');
-            break;
-          default:
-            navigate('/');
-        }
-      }
+      // The redirect will be handled by the useEffect above
     } catch (error: any) {
       toast({
         title: "Erreur de connexion",

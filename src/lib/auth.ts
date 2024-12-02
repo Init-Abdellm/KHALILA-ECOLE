@@ -17,6 +17,13 @@ export const useAuth = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
+    // Check current session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null);
+      setLoading(false);
+    });
+
+    // Listen for changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null);
       setLoading(false);
@@ -52,6 +59,7 @@ export const useProfile = () => {
 
         setProfile(data);
       } catch (error: any) {
+        console.error('Error fetching profile:', error);
         toast({
           title: "Erreur",
           description: "Impossible de charger votre profil.",
@@ -66,19 +74,6 @@ export const useProfile = () => {
   }, [user]);
 
   return { profile, loading };
-};
-
-export const useRequireAuth = (redirectTo = '/login') => {
-  const { user, loading } = useAuth();
-  const navigate = useNavigate();
-
-  useEffect(() => {
-    if (!loading && !user) {
-      navigate(redirectTo);
-    }
-  }, [user, loading, navigate, redirectTo]);
-
-  return { user, loading };
 };
 
 export const getRoleLabel = (role: string | null): string => {
