@@ -24,7 +24,32 @@ const Login = () => {
         password,
       });
 
-      if (error) throw error;
+      if (error) {
+        if (error.message.includes('Email not confirmed')) {
+          // Handle email not confirmed case
+          toast({
+            title: "Email non confirmé",
+            description: "Veuillez vérifier votre boîte mail et confirmer votre adresse email avant de vous connecter.",
+            variant: "destructive",
+          });
+
+          // Option to resend confirmation email
+          const { error: resendError } = await supabase.auth.resend({
+            type: 'signup',
+            email,
+          });
+
+          if (!resendError) {
+            toast({
+              title: "Email de confirmation renvoyé",
+              description: "Un nouvel email de confirmation vous a été envoyé.",
+            });
+          }
+          
+          return;
+        }
+        throw error;
+      }
 
       const { data: profile } = await supabase
         .from('profiles')
