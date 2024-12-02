@@ -9,6 +9,7 @@ import Landing from "./pages/Landing";
 import Blog from "./pages/Blog";
 import Events from "./pages/Events";
 import Login from "./pages/Login";
+import Register from "./pages/Register";
 import AdminDashboard from "./pages/admin/Dashboard";
 import AdminUsers from "./pages/admin/Users";
 import AdminSettings from "./pages/admin/Settings";
@@ -67,6 +68,7 @@ const App = () => (
           <Route path="/blog" element={<Blog />} />
           <Route path="/events" element={<Events />} />
           <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
           
           {/* Admin Routes */}
           <Route path="/admin" element={<ProtectedRoute allowedRoles={['admin']}><AdminDashboard /></ProtectedRoute>} />
