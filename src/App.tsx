@@ -2,7 +2,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { useAuth, useProfile } from "@/lib/auth";
 import { toast } from "@/components/ui/use-toast";
 import Landing from "./pages/Landing";
@@ -32,6 +32,7 @@ const queryClient = new QueryClient();
 const ProtectedRoute = ({ children, allowedRoles = [] }: { children: React.ReactNode, allowedRoles?: string[] }) => {
   const { user, loading } = useAuth();
   const { profile, loading: profileLoading } = useProfile();
+  const location = useLocation();
   
   if (loading || profileLoading) {
     return (
@@ -42,16 +43,20 @@ const ProtectedRoute = ({ children, allowedRoles = [] }: { children: React.React
   }
   
   if (!user) {
-    return <Navigate to="/login" />;
+    return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
   if (allowedRoles.length > 0 && (!profile?.role || !allowedRoles.includes(profile.role))) {
-    toast({
-      title: "Accès refusé",
-      description: "Vous n'avez pas les permissions nécessaires pour accéder à cette page.",
-      variant: "destructive",
-    });
-    return <Navigate to="/" />;
+    // Use a timeout to prevent the setState during render issue
+    setTimeout(() => {
+      toast({
+        title: "Accès refusé",
+        description: "Vous n'avez pas les permissions nécessaires pour accéder à cette page.",
+        variant: "destructive",
+      });
+    }, 0);
+    
+    return <Navigate to="/" replace />;
   }
   
   return <>{children}</>;
