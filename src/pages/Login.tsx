@@ -14,6 +14,28 @@ const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
+  const handleResendConfirmation = async () => {
+    try {
+      const { error } = await supabase.auth.resend({
+        type: 'signup',
+        email,
+      });
+      
+      if (error) throw error;
+      
+      toast({
+        title: "Email de confirmation envoyé",
+        description: "Veuillez vérifier votre boîte mail pour confirmer votre compte.",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Erreur",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -26,26 +48,16 @@ const Login = () => {
 
       if (error) {
         if (error.message.includes('Email not confirmed')) {
-          // Handle email not confirmed case
           toast({
             title: "Email non confirmé",
             description: "Veuillez vérifier votre boîte mail et confirmer votre adresse email avant de vous connecter.",
             variant: "destructive",
+            action: (
+              <Button variant="outline" onClick={handleResendConfirmation}>
+                Renvoyer l'email
+              </Button>
+            ),
           });
-
-          // Option to resend confirmation email
-          const { error: resendError } = await supabase.auth.resend({
-            type: 'signup',
-            email,
-          });
-
-          if (!resendError) {
-            toast({
-              title: "Email de confirmation renvoyé",
-              description: "Un nouvel email de confirmation vous a été envoyé.",
-            });
-          }
-          
           return;
         }
         throw error;
