@@ -34,6 +34,10 @@ const ProtectedRoute = ({ children, allowedRoles = [] }: { children: React.React
   const { profile, loading: profileLoading } = useProfile();
   const location = useLocation();
   
+  console.log("Protected Route - User:", user);
+  console.log("Protected Route - Profile:", profile);
+  console.log("Protected Route - Allowed Roles:", allowedRoles);
+  
   if (loading || profileLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -43,11 +47,12 @@ const ProtectedRoute = ({ children, allowedRoles = [] }: { children: React.React
   }
   
   if (!user) {
+    console.log("No user, redirecting to login");
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
   if (allowedRoles.length > 0 && (!profile?.role || !allowedRoles.includes(profile.role))) {
-    // Use a timeout to prevent the setState during render issue
+    console.log("Access denied - User role:", profile?.role);
     setTimeout(() => {
       toast({
         title: "Accès refusé",
@@ -59,6 +64,7 @@ const ProtectedRoute = ({ children, allowedRoles = [] }: { children: React.React
     return <Navigate to="/" replace />;
   }
   
+  console.log("Access granted");
   return <>{children}</>;
 };
 

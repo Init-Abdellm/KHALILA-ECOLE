@@ -19,12 +19,14 @@ export const useAuth = () => {
   useEffect(() => {
     // Check current session
     supabase.auth.getSession().then(({ data: { session } }) => {
+      console.log("Current session:", session);
       setUser(session?.user ?? null);
       setLoading(false);
     });
 
     // Listen for changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      console.log("Auth state changed:", session);
       setUser(session?.user ?? null);
       setLoading(false);
     });
@@ -49,14 +51,19 @@ export const useProfile = () => {
       }
 
       try {
+        console.log("Fetching profile for user:", user.id);
         const { data, error } = await supabase
           .from('profiles')
           .select('*')
           .eq('id', user.id)
           .single();
 
-        if (error) throw error;
+        if (error) {
+          console.error('Error fetching profile:', error);
+          throw error;
+        }
 
+        console.log("Fetched profile:", data);
         setProfile(data);
       } catch (error: any) {
         console.error('Error fetching profile:', error);
