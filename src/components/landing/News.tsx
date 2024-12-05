@@ -27,29 +27,37 @@ const News = () => {
   ];
 
   return (
-    <section className="py-16 bg-neutral-100">
+    <section className="py-24 bg-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <h2 className="text-3xl font-bold text-center mb-12">Actualités et Événements</h2>
+        <div className="text-center mb-16">
+          <h2 className="text-3xl font-bold text-primary mb-4">Actualités et Événements</h2>
+          <div className="w-24 h-1 bg-secondary mx-auto"></div>
+        </div>
         <Carousel className="w-full max-w-5xl mx-auto">
           <CarouselContent>
             {news.map((item, index) => (
               <CarouselItem key={index}>
-                <Card className="overflow-hidden">
-                  <img
-                    src={item.image}
-                    alt={item.title}
-                    className="w-full h-64 object-cover"
-                  />
-                  <div className="p-6">
-                    <h3 className="text-xl font-semibold mb-2">{item.title}</h3>
-                    <p className="text-gray-600">{item.date}</p>
+                <Card className="overflow-hidden group cursor-pointer">
+                  <div className="relative">
+                    <img
+                      src={item.image}
+                      alt={item.title}
+                      className="w-full h-64 object-cover transition-transform duration-300 group-hover:scale-105"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-primary/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                  </div>
+                  <div className="p-6 bg-white">
+                    <h3 className="text-xl font-semibold mb-2 text-primary-dark group-hover:text-secondary transition-colors duration-300">
+                      {item.title}
+                    </h3>
+                    <p className="text-neutral-500">{item.date}</p>
                   </div>
                 </Card>
               </CarouselItem>
             ))}
           </CarouselContent>
-          <CarouselPrevious />
-          <CarouselNext />
+          <CarouselPrevious className="bg-primary text-white hover:bg-primary-dark" />
+          <CarouselNext className="bg-primary text-white hover:bg-primary-dark" />
         </Carousel>
       </div>
     </section>

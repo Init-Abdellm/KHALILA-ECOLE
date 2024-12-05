@@ -20,20 +20,24 @@ export default {
     extend: {
       colors: {
         primary: {
-          DEFAULT: "#0EA5E9",
+          DEFAULT: "#0B3C5D", // Deep Enterprise Blue
+          light: "#1D5B7B",
+          dark: "#082C44",
           foreground: "#FFFFFF",
         },
         secondary: {
-          DEFAULT: "#F97316",
+          DEFAULT: "#F16522", // Vibrant Orange
+          light: "#F48B54",
+          dark: "#D54E0F",
           foreground: "#FFFFFF",
         },
-        background: "#F1F0FB",
+        background: "#F8FAFC",
         neutral: {
           100: "#FFFFFF",
-          200: "#F1F0FB",
-          300: "#E2E1F6",
-          400: "#D3D2F1",
-          500: "#C4C3EC",
+          200: "#F1F5F9",
+          300: "#E2E8F0",
+          400: "#CBD5E1",
+          500: "#94A3B8",
         },
       },
       fontFamily: {
