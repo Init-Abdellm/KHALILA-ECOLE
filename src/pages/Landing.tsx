@@ -1,12 +1,41 @@
 import { School } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import Hero from "@/components/landing/Hero";
 import Features from "@/components/landing/Features";
 import News from "@/components/landing/News";
 import SubscriptionForm from "@/components/landing/SubscriptionForm";
 import { motion } from "framer-motion";
+import { useAuth, useProfile } from "@/lib/auth";
 
 const Landing = () => {
+  const { user } = useAuth();
+  const { profile } = useProfile();
+  const navigate = useNavigate();
+
+  const handleConnectClick = () => {
+    if (user && profile) {
+      const defaultRoute = getDefaultRoute(profile.role);
+      navigate(defaultRoute);
+    } else {
+      navigate('/login');
+    }
+  };
+
+  const getDefaultRoute = (role: string | null) => {
+    switch (role) {
+      case 'admin':
+        return '/admin';
+      case 'director':
+        return '/director';
+      case 'teacher':
+        return '/teacher';
+      case 'student':
+        return '/student';
+      default:
+        return '/login';
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-neutral-200">
       {/* Header */}
@@ -19,12 +48,12 @@ const Landing = () => {
                 École Khalilia
               </h1>
             </Link>
-            <Link
-              to="/login"
+            <button
+              onClick={handleConnectClick}
               className="bg-primary hover:bg-primary/90 text-white px-4 py-2 rounded-full transition-colors"
             >
               Espace Connecté
-            </Link>
+            </button>
           </div>
         </div>
       </header>

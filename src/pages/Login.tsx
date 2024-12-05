@@ -1,140 +1,70 @@
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
+import { Auth } from "@supabase/auth-ui-react";
+import { ThemeSupa } from "@supabase/auth-ui-shared";
 import { supabase } from "@/integrations/supabase/client";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Card } from "@/components/ui/card";
+import { useAuth, useProfile } from "@/lib/auth";
 import { toast } from "@/components/ui/use-toast";
-import { School } from "lucide-react";
-import { useAuth } from "@/lib/auth";
 
 const Login = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { user } = useAuth();
-  const [loading, setLoading] = useState(false);
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const { profile } = useProfile();
 
-  // Redirect if user is already logged in
   useEffect(() => {
-    if (user) {
-      const from = location.state?.from?.pathname || "/";
+    console.log("Login component - User:", user);
+    console.log("Login component - Profile:", profile);
+
+    if (user && profile) {
+      const from = location.state?.from?.pathname || getDefaultRoute(profile.role);
+      console.log("Redirecting to:", from);
       navigate(from, { replace: true });
     }
-  }, [user, navigate, location]);
+  }, [user, profile, navigate, location]);
 
-  const handleResendConfirmation = async () => {
-    try {
-      const { error } = await supabase.auth.resend({
-        type: 'signup',
-        email,
-      });
-      
-      if (error) throw error;
-      
-      toast({
-        title: "Email de confirmation envoyé",
-        description: "Veuillez vérifier votre boîte mail pour confirmer votre compte.",
-      });
-    } catch (error: any) {
-      toast({
-        title: "Erreur",
-        description: error.message,
-        variant: "destructive",
-      });
-    }
-  };
-
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-
-    try {
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-
-      if (error) {
-        if (error.message.includes('Email not confirmed')) {
-          toast({
-            title: "Email non confirmé",
-            description: "Veuillez vérifier votre boîte mail et confirmer votre adresse email avant de vous connecter.",
-            variant: "destructive",
-            action: (
-              <Button variant="outline" onClick={handleResendConfirmation}>
-                Renvoyer l'email
-              </Button>
-            ),
-          });
-          return;
-        }
-        throw error;
-      }
-
-      // The redirect will be handled by the useEffect above
-    } catch (error: any) {
-      toast({
-        title: "Erreur de connexion",
-        description: error.message,
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
+  const getDefaultRoute = (role: string | null) => {
+    console.log("Getting default route for role:", role);
+    switch (role) {
+      case 'admin':
+        return '/admin';
+      case 'director':
+        return '/director';
+      case 'teacher':
+        return '/teacher';
+      case 'student':
+        return '/student';
+      default:
+        return '/';
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-neutral-50">
-      <Card className="w-full max-w-md p-8">
-        <div className="flex flex-col items-center mb-8">
-          <School className="w-12 h-12 text-primary mb-4" />
-          <h1 className="text-2xl font-bold text-gray-900">Khalilia</h1>
-          <p className="text-gray-600">Connectez-vous à votre compte</p>
+    <div className="min-h-screen bg-background flex items-center justify-center p-4">
+      <div className="w-full max-w-md space-y-4">
+        <div className="text-center mb-8">
+          <h1 className="text-2xl font-bold">Connexion</h1>
+          <p className="text-muted-foreground">Connectez-vous à votre compte</p>
         </div>
-
-        <form onSubmit={handleLogin} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
-            <Input
-              id="email"
-              type="email"
-              placeholder="votre@email.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="password">Mot de passe</Label>
-            <Input
-              id="password"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-            />
-          </div>
-
-          <Button
-            type="submit"
-            className="w-full"
-            disabled={loading}
-          >
-            {loading ? "Connexion..." : "Se connecter"}
-          </Button>
-        </form>
-
-        <p className="text-center text-sm text-gray-600 mt-4">
-          Pas encore de compte ?{" "}
-          <a href="/register" className="text-primary hover:underline">
-            S'inscrire
-          </a>
-        </p>
-      </Card>
+        <div className="bg-white p-6 rounded-lg shadow-md">
+          <Auth
+            supabaseClient={supabase}
+            appearance={{
+              theme: ThemeSupa,
+              variables: {
+                default: {
+                  colors: {
+                    brand: '#000',
+                    brandAccent: '#666',
+                  },
+                },
+              },
+            }}
+            providers={[]}
+            redirectTo={window.location.origin}
+          />
+        </div>
+      </div>
     </div>
   );
 };
