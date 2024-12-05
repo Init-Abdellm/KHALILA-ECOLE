@@ -59,7 +59,7 @@ const DashboardLayout = ({ children, title, role }: DashboardLayoutProps) => {
   }, [profile?.id]);
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-gradient-to-br from-primary/5 to-secondary/5">
       <Sidebar
         isSidebarOpen={isSidebarOpen}
         setIsSidebarOpen={setIsSidebarOpen}
@@ -84,7 +84,7 @@ const DashboardLayout = ({ children, title, role }: DashboardLayoutProps) => {
           setIsSidebarOpen={setIsSidebarOpen}
         />
         <main className="p-4 md:p-6">
-          <Card className="p-6 shadow-sm">
+          <Card className="p-6 shadow-lg bg-white/80 backdrop-blur-sm">
             {children}
           </Card>
         </main>

@@ -6,7 +6,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { toast } from "@/components/ui/use-toast";
-import { School } from "lucide-react";
 
 const Register = () => {
   const navigate = useNavigate();
@@ -28,7 +27,7 @@ const Register = () => {
           data: {
             first_name: firstName,
             last_name: lastName,
-            role: 'student' // Default role for self-registration
+            role: 'student'
           }
         }
       });
@@ -53,11 +52,15 @@ const Register = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-neutral-50">
-      <Card className="w-full max-w-md p-8">
+    <div className="min-h-screen bg-gradient-to-br from-primary/5 to-secondary/5 flex items-center justify-center p-4">
+      <Card className="w-full max-w-md p-8 shadow-lg bg-white/80 backdrop-blur-sm">
         <div className="flex flex-col items-center mb-8">
-          <School className="w-12 h-12 text-primary mb-4" />
-          <h1 className="text-2xl font-bold text-gray-900">Khalilia</h1>
+          <img
+            src="/logo.png"
+            alt="École Khalilia"
+            className="h-16 w-auto mb-4"
+          />
+          <h1 className="text-2xl font-bold text-primary">Khalilia</h1>
           <p className="text-gray-600">Créez votre compte</p>
         </div>
 
@@ -71,6 +74,7 @@ const Register = () => {
                 value={firstName}
                 onChange={(e) => setFirstName(e.target.value)}
                 required
+                className="bg-white"
               />
             </div>
 
@@ -82,6 +86,7 @@ const Register = () => {
                 value={lastName}
                 onChange={(e) => setLastName(e.target.value)}
                 required
+                className="bg-white"
               />
             </div>
           </div>
@@ -95,6 +100,7 @@ const Register = () => {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
+              className="bg-white"
             />
           </div>
 
@@ -106,12 +112,13 @@ const Register = () => {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
+              className="bg-white"
             />
           </div>
 
           <Button
             type="submit"
-            className="w-full"
+            className="w-full bg-primary hover:bg-primary-dark text-white"
             disabled={loading}
           >
             {loading ? "Inscription..." : "S'inscrire"}

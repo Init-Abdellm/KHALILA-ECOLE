@@ -4,6 +4,7 @@ import { Auth } from "@supabase/auth-ui-react";
 import { ThemeSupa } from "@supabase/auth-ui-shared";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth, useProfile } from "@/lib/auth";
+import { Card } from "@/components/ui/card";
 
 const Login = () => {
   const navigate = useNavigate();
@@ -12,18 +13,13 @@ const Login = () => {
   const { profile } = useProfile();
 
   useEffect(() => {
-    console.log("Login component - User:", user);
-    console.log("Login component - Profile:", profile);
-
     if (user && profile) {
       const from = location.state?.from?.pathname || getDefaultRoute(profile.role);
-      console.log("Redirecting to:", from);
       navigate(from, { replace: true });
     }
   }, [user, profile, navigate, location]);
 
   const getDefaultRoute = (role: string | null) => {
-    console.log("Getting default route for role:", role);
     switch (role) {
       case 'admin':
         return '/admin';
@@ -39,13 +35,18 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-primary/5 to-secondary/5 flex items-center justify-center p-4">
       <div className="w-full max-w-md space-y-4">
         <div className="text-center mb-8">
-          <h1 className="text-2xl font-bold">Connexion</h1>
-          <p className="text-muted-foreground">Connectez-vous à votre compte</p>
+          <img
+            src="/logo.png"
+            alt="École Khalilia"
+            className="h-16 w-auto mx-auto mb-4"
+          />
+          <h1 className="text-2xl font-bold text-primary">Connexion</h1>
+          <p className="text-gray-600">Connectez-vous à votre compte</p>
         </div>
-        <div className="bg-white p-6 rounded-lg shadow-md">
+        <Card className="p-6 shadow-lg bg-white/80 backdrop-blur-sm">
           <Auth
             supabaseClient={supabase}
             appearance={{
@@ -53,16 +54,21 @@ const Login = () => {
               variables: {
                 default: {
                   colors: {
-                    brand: '#000',
-                    brandAccent: '#666',
+                    brand: '#0B3C5D',
+                    brandAccent: '#F16522',
                   },
                 },
+              },
+              className: {
+                container: 'w-full',
+                button: 'w-full px-4 py-2 text-white bg-primary hover:bg-primary-dark',
+                input: 'w-full px-3 py-2 border rounded-md',
               },
             }}
             providers={[]}
             redirectTo={window.location.origin}
           />
-        </div>
+        </Card>
       </div>
     </div>
   );

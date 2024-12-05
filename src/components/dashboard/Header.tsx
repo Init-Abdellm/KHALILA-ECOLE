@@ -48,13 +48,13 @@ export const Header = ({ title, role, profile, isSidebarOpen, setIsSidebarOpen }
           )}
           <div className="flex items-center gap-4">
             <img
-              src="/placeholder.svg"
-              alt="Logo"
-              className="h-8 w-auto"
+              src="/logo.png"
+              alt="École Khalilia"
+              className="h-12 w-auto"
             />
             <div>
-              <h1 className="text-xl md:text-2xl font-bold text-gray-800">{title}</h1>
-              <p className="text-xs md:text-sm text-gray-600">
+              <h1 className="text-xl md:text-2xl font-bold text-primary">{title}</h1>
+              <p className="text-sm text-gray-600">
                 {profile?.first_name} {profile?.last_name} - {role}
               </p>
             </div>
