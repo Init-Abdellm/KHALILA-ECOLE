@@ -46,11 +46,18 @@ export const Header = ({ title, role, profile, isSidebarOpen, setIsSidebarOpen }
               <Menu className="h-5 w-5" />
             </Button>
           )}
-          <div>
-            <h1 className="text-xl md:text-2xl font-bold text-gray-800">{title}</h1>
-            <p className="text-xs md:text-sm text-gray-600">
-              {profile?.first_name} {profile?.last_name} - {role}
-            </p>
+          <div className="flex items-center gap-4">
+            <img
+              src="/placeholder.svg"
+              alt="Logo"
+              className="h-8 w-auto"
+            />
+            <div>
+              <h1 className="text-xl md:text-2xl font-bold text-gray-800">{title}</h1>
+              <p className="text-xs md:text-sm text-gray-600">
+                {profile?.first_name} {profile?.last_name} - {role}
+              </p>
+            </div>
           </div>
         </div>
         <div className="flex items-center gap-2 md:gap-4">
