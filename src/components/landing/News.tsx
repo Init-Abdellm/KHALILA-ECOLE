@@ -1,20 +1,15 @@
-import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
-import {
-  Carousel,
-  CarouselContent,
-  CarouselItem,
-  CarouselNext,
-  CarouselPrevious,
-} from "@/components/ui/carousel";
+import { CalendarDays } from "lucide-react";
 
 interface Event {
   id: string;
   title: string;
-  date: string;
   description: string;
+  date: string;
+  time: string;
   location: string;
 }
 
@@ -22,21 +17,15 @@ const News = () => {
   const [events, setEvents] = useState<Event[]>([]);
 
   const { data: initialEvents, isLoading } = useQuery({
-    queryKey: ["landing-events"],
+    queryKey: ["events"],
     queryFn: async () => {
-      console.log("Fetching events...");
       const { data, error } = await supabase
         .from("events")
         .select("*")
         .order("date", { ascending: true })
         .limit(3);
 
-      if (error) {
-        console.error("Error fetching events:", error);
-        throw error;
-      }
-      
-      console.log("Fetched events:", data);
+      if (error) throw error;
       return data as Event[];
     },
   });
@@ -49,24 +38,24 @@ const News = () => {
 
   useEffect(() => {
     const channel = supabase
-      .channel('events-changes')
+      .channel("events-changes")
       .on(
-        'postgres_changes',
+        "postgres_changes",
         {
-          event: '*',
-          schema: 'public',
-          table: 'events',
+          event: "*",
+          schema: "public",
+          table: "events",
         },
         async (payload) => {
-          console.log('Real-time event update:', payload);
-          // Refresh the events list
-          const { data } = await supabase
+          console.log("Real-time event update:", payload);
+          // Refresh the events data
+          const { data, error } = await supabase
             .from("events")
             .select("*")
             .order("date", { ascending: true })
             .limit(3);
-          
-          if (data) {
+
+          if (!error && data) {
             setEvents(data);
           }
         }
@@ -80,57 +69,52 @@ const News = () => {
 
   if (isLoading) {
     return (
-      <section className="py-24 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl font-bold text-primary mb-4">Actualités et Événements</h2>
-            <div className="w-24 h-1 bg-secondary mx-auto"></div>
-          </div>
-          <div className="animate-pulse space-y-4">
-            <div className="h-64 bg-gray-200 rounded"></div>
+      <div className="py-12">
+        <div className="container mx-auto px-4">
+          <h2 className="text-3xl font-bold text-center mb-8">Actualités</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {[1, 2, 3].map((i) => (
+              <Card key={i} className="p-6 animate-pulse">
+                <div className="h-4 bg-gray-200 rounded w-3/4 mb-4"></div>
+                <div className="h-4 bg-gray-200 rounded w-1/2 mb-2"></div>
+                <div className="h-4 bg-gray-200 rounded w-full"></div>
+              </Card>
+            ))}
           </div>
         </div>
-      </section>
+      </div>
     );
   }
 
   return (
-    <section className="py-24 bg-white">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-16">
-          <h2 className="text-3xl font-bold text-primary mb-4">Actualités et Événements</h2>
-          <div className="w-24 h-1 bg-secondary mx-auto"></div>
+    <div className="py-12">
+      <div className="container mx-auto px-4">
+        <h2 className="text-3xl font-bold text-center mb-8">Actualités</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {events.map((event) => (
+            <Card key={event.id} className="p-6">
+              <h3 className="text-xl font-semibold mb-2">{event.title}</h3>
+              <div className="flex items-center text-gray-600 mb-2">
+                <CalendarDays className="w-4 h-4 mr-2" />
+                <span>
+                  {new Date(event.date).toLocaleDateString("fr-FR", {
+                    day: "numeric",
+                    month: "long",
+                    year: "numeric",
+                  })}
+                  {" à "}
+                  {event.time.slice(0, 5)}
+                </span>
+              </div>
+              <p className="text-gray-600">{event.description}</p>
+              <p className="text-sm text-gray-500 mt-2">
+                Lieu: {event.location}
+              </p>
+            </Card>
+          ))}
         </div>
-        <Carousel className="w-full max-w-5xl mx-auto">
-          <CarouselContent>
-            {events.map((event) => (
-              <CarouselItem key={event.id}>
-                <Card className="overflow-hidden group cursor-pointer">
-                  <div className="relative">
-                    <img
-                      src="https://images.unsplash.com/photo-1605810230434-7631ac76ec81"
-                      alt={event.title}
-                      className="w-full h-64 object-cover transition-transform duration-300 group-hover:scale-105"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-primary/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                  </div>
-                  <div className="p-6 bg-white">
-                    <h3 className="text-xl font-semibold mb-2 text-primary-dark group-hover:text-secondary transition-colors duration-300">
-                      {event.title}
-                    </h3>
-                    <p className="text-neutral-500">
-                      {new Date(event.date).toLocaleDateString('fr-FR')}
-                    </p>
-                  </div>
-                </Card>
-              </CarouselItem>
-            ))}
-          </CarouselContent>
-          <CarouselPrevious className="bg-primary text-white hover:bg-primary-dark" />
-          <CarouselNext className="bg-primary text-white hover:bg-primary-dark" />
-        </Carousel>
       </div>
-    </section>
+    </div>
   );
 };
 
