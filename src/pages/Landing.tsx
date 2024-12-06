@@ -1,74 +1,136 @@
-import { Button } from "@/components/ui/button";
-import { useNavigate } from "react-router-dom";
-import { useAuth } from "@/lib/auth";
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { useQuery } from "@tanstack/react-query";
 import Hero from "@/components/landing/Hero";
 import Features from "@/components/landing/Features";
 import News from "@/components/landing/News";
 import SubscriptionForm from "@/components/landing/SubscriptionForm";
 
-const Landing = () => {
-  const navigate = useNavigate();
-  const { user } = useAuth();
+interface BlogPost {
+  id: string;
+  title: string;
+  content: string;
+  published_at: string;
+  profiles: {
+    first_name: string | null;
+    last_name: string | null;
+  } | null;
+}
 
-  const handleConnectClick = () => {
-    if (user) {
-      navigate("/admin");
-    } else {
-      navigate("/login");
-    }
-  };
+interface Event {
+  id: string;
+  title: string;
+  description: string;
+  date: string;
+  time: string;
+  location: string;
+}
+
+const Landing = () => {
+  const [latestBlogs, setLatestBlogs] = useState<BlogPost[]>([]);
+  const [upcomingEvents, setUpcomingEvents] = useState<Event[]>([]);
+
+  const { data: blogs, isLoading: blogsLoading } = useQuery({
+    queryKey: ["landing-blogs"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("blogs")
+        .select(`
+          *,
+          profiles (
+            first_name,
+            last_name
+          )
+        `)
+        .order("published_at", { ascending: false })
+        .limit(3);
+
+      if (error) throw error;
+      return data as BlogPost[];
+    },
+  });
+
+  const { data: events, isLoading: eventsLoading } = useQuery({
+    queryKey: ["landing-events"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("events")
+        .select("*")
+        .gte("date", new Date().toISOString().split("T")[0])
+        .order("date", { ascending: true })
+        .limit(3);
+
+      if (error) throw error;
+      return data as Event[];
+    },
+  });
+
+  useEffect(() => {
+    if (blogs) setLatestBlogs(blogs);
+    if (events) setUpcomingEvents(events);
+
+    // Subscribe to real-time changes
+    const blogsChannel = supabase
+      .channel("blogs-changes")
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "blogs",
+        },
+        async () => {
+          const { data } = await supabase
+            .from("blogs")
+            .select(`
+              *,
+              profiles (
+                first_name,
+                last_name
+              )
+            `)
+            .order("published_at", { ascending: false })
+            .limit(3);
+          
+          if (data) setLatestBlogs(data as BlogPost[]);
+        }
+      )
+      .subscribe();
+
+    const eventsChannel = supabase
+      .channel("events-changes")
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "events",
+        },
+        async () => {
+          const { data } = await supabase
+            .from("events")
+            .select("*")
+            .gte("date", new Date().toISOString().split("T")[0])
+            .order("date", { ascending: true })
+            .limit(3);
+          
+          if (data) setUpcomingEvents(data as Event[]);
+        }
+      )
+      .subscribe();
+
+    return () => {
+      blogsChannel.unsubscribe();
+      eventsChannel.unsubscribe();
+    };
+  }, [blogs, events]);
 
   return (
-    <div className="min-h-screen bg-background">
-      <nav className="fixed w-full top-0 z-50 bg-white/80 backdrop-blur-sm border-b border-neutral-200">
-        <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-          <div className="flex items-center gap-2">
-            <img src="/logo.png" alt="Logo" className="h-10" />
-            <span className="text-xl font-semibold text-primary">Khalilia</span>
-          </div>
-          <Button onClick={handleConnectClick} variant="default">
-            Espace Connecté
-          </Button>
-        </div>
-      </nav>
-
-      <main className="pt-20">
-        <Hero />
-        <Features />
-        <News />
-        <SubscriptionForm />
-      </main>
-
-      <footer className="bg-primary text-primary-foreground py-8">
-        <div className="container mx-auto px-4">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div>
-              <h3 className="text-lg font-semibold mb-4">Contact</h3>
-              <p className="text-sm">N° 68 Lot El Massira - Ouarzazate (M)</p>
-              <p className="text-sm mt-2">Email: contact@khalilia.edu</p>
-              <p className="text-sm mt-2">Tél: +212 5XX XX XX XX</p>
-            </div>
-            <div>
-              <h3 className="text-lg font-semibold mb-4">Liens Rapides</h3>
-              <ul className="space-y-2 text-sm">
-                <li><a href="/blog" className="hover:underline">Blog</a></li>
-                <li><a href="/events" className="hover:underline">Événements</a></li>
-              </ul>
-            </div>
-            <div>
-              <h3 className="text-lg font-semibold mb-4">Suivez-nous</h3>
-              <div className="flex space-x-4">
-                <a href="#" className="hover:text-secondary">Facebook</a>
-                <a href="#" className="hover:text-secondary">Instagram</a>
-                <a href="#" className="hover:text-secondary">LinkedIn</a>
-              </div>
-            </div>
-          </div>
-          <div className="mt-8 pt-8 border-t border-primary-foreground/20 text-center text-sm">
-            <p>&copy; {new Date().getFullYear()} Khalilia. Tous droits réservés.</p>
-          </div>
-        </div>
-      </footer>
+    <div className="min-h-screen">
+      <Hero />
+      <Features />
+      <News blogs={latestBlogs} events={upcomingEvents} isLoading={blogsLoading || eventsLoading} />
+      <SubscriptionForm />
     </div>
   );
 };
