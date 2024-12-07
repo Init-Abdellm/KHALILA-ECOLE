@@ -1,10 +1,16 @@
 import { Button } from "@/components/ui/button";
-import { LogOut, Menu } from "lucide-react";
+import { LogOut, Menu, Bell } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/use-toast";
 import { Profile } from "@/lib/auth";
 import { useIsMobile } from "@/hooks/use-mobile";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 interface HeaderProps {
   title: string;
@@ -14,7 +20,13 @@ interface HeaderProps {
   setIsSidebarOpen: (open: boolean) => void;
 }
 
-export const Header = ({ title, role, profile, isSidebarOpen, setIsSidebarOpen }: HeaderProps) => {
+export const Header = ({ 
+  title, 
+  role, 
+  profile, 
+  isSidebarOpen, 
+  setIsSidebarOpen 
+}: HeaderProps) => {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
 
@@ -34,41 +46,61 @@ export const Header = ({ title, role, profile, isSidebarOpen, setIsSidebarOpen }
 
   return (
     <header className="bg-white shadow-sm sticky top-0 z-30">
-      <div className="px-4 py-3 md:px-6 md:py-4 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          {isMobile && (
-            <Button
-              variant="ghost"
-              size="icon"
-              className="md:hidden"
-              onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-            >
-              <Menu className="h-5 w-5" />
-            </Button>
-          )}
-          <div className="flex items-center gap-4">
-            <img
-              src="/logo.png"
-              alt="École Khalilia"
-              className="h-12 w-auto"
-            />
-            <div>
-              <h1 className="text-xl md:text-2xl font-bold text-primary">{title}</h1>
-              <p className="text-sm text-gray-600">
-                {profile?.first_name} {profile?.last_name} - {role}
-              </p>
+      <div className="px-4 py-3 md:px-6 md:py-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            {isMobile && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="md:hidden"
+                onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+              >
+                <Menu className="h-5 w-5" />
+              </Button>
+            )}
+            <div className="flex items-center gap-4">
+              <img
+                src="/logo.png"
+                alt="École Khalilia"
+                className="h-12 w-auto"
+              />
+              <div>
+                <h1 className="text-xl md:text-2xl font-bold text-primary">{title}</h1>
+                <p className="text-sm text-gray-600">
+                  {profile?.first_name} {profile?.last_name} - {role}
+                </p>
+              </div>
             </div>
           </div>
-        </div>
-        <div className="flex items-center gap-2 md:gap-4">
-          <div className="hidden md:flex gap-2">
-            <Button variant="ghost" size="sm" className="text-sm text-gray-600 hover:text-primary">FR</Button>
-            <Button variant="ghost" size="sm" className="text-sm text-gray-600 hover:text-primary">عربي</Button>
-            <Button variant="ghost" size="sm" className="text-sm text-gray-600 hover:text-primary">EN</Button>
+          
+          <div className="flex items-center gap-2">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" className="relative">
+                  <Bell className="h-5 w-5" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuItem>
+                  Voir toutes les notifications
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon">
+                  <LogOut className="h-5 w-5" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuItem onClick={handleLogout}>
+                  Se déconnecter
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
-          <Button variant="ghost" size="icon" onClick={handleLogout}>
-            <LogOut className="h-4 w-4" />
-          </Button>
         </div>
       </div>
     </header>

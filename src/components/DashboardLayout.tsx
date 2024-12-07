@@ -5,6 +5,7 @@ import { Header } from "./dashboard/Header";
 import { Sidebar } from "./dashboard/Sidebar";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Card } from "./ui/card";
+import { cn } from "@/lib/utils";
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -68,13 +69,14 @@ const DashboardLayout = ({ children, title, role }: DashboardLayoutProps) => {
       />
 
       <div 
-        className={`transition-all duration-300 ${
+        className={cn(
+          "transition-all duration-300",
           isSidebarOpen 
             ? isMobile 
               ? 'ml-0' 
               : 'ml-64' 
             : 'ml-0 md:ml-20'
-        }`}
+        )}
       >
         <Header 
           title={title} 
@@ -83,7 +85,7 @@ const DashboardLayout = ({ children, title, role }: DashboardLayoutProps) => {
           isSidebarOpen={isSidebarOpen}
           setIsSidebarOpen={setIsSidebarOpen}
         />
-        <main className="p-4 md:p-6">
+        <main className="p-4 md:p-6 space-y-6">
           <Card className="p-6 shadow-lg bg-white/80 backdrop-blur-sm">
             {children}
           </Card>
