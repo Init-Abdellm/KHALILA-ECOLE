@@ -2,8 +2,11 @@ import { Button } from "@/components/ui/button";
 import { ArrowRight, LogIn } from "lucide-react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
+import { useTranslation } from "react-i18next";
 
 const Hero = () => {
+  const { t } = useTranslation();
+
   return (
     <section className="relative py-32 overflow-hidden bg-gradient-to-br from-primary to-primary-dark">
       <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1605810230434-7631ac76ec81')] opacity-10 bg-cover bg-center mix-blend-overlay" />
@@ -16,10 +19,10 @@ const Hero = () => {
           className="text-center"
         >
           <h1 className="text-4xl md:text-6xl font-bold text-white mb-6 leading-tight">
-            Bienvenue à l'École Khalilia
+            {t('hero.title')}
           </h1>
           <p className="text-xl text-neutral-200 max-w-3xl mx-auto mb-8">
-            Une éducation d'excellence pour préparer les leaders de demain
+            {t('hero.subtitle')}
           </p>
           <div className="flex flex-col sm:flex-row justify-center gap-4 items-center">
             <Button
@@ -28,7 +31,7 @@ const Hero = () => {
               className="text-lg bg-secondary hover:bg-secondary-dark text-white transition-colors duration-300 w-full sm:w-auto"
             >
               <Link to="/blog">
-                Découvrir Notre Blog
+                {t('hero.discoverBlog')}
                 <ArrowRight className="ml-2" />
               </Link>
             </Button>
@@ -39,7 +42,7 @@ const Hero = () => {
               className="text-lg border-2 border-white text-white hover:bg-white/10 transition-colors duration-300 w-full sm:w-auto"
             >
               <Link to="/login">
-                Espace Connecté
+                {t('hero.connectedSpace')}
                 <LogIn className="ml-2" />
               </Link>
             </Button>
