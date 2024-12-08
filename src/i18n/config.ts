@@ -10,166 +10,238 @@ i18n
     resources: {
       en: {
         translation: {
-          hero: {
-            title: 'Welcome to Khalilia School',
-            subtitle: 'Excellence in education to prepare tomorrow\'s leaders',
-            discoverBlog: 'Discover Our Blog',
-            connectedSpace: 'Connected Space'
-          },
-          features: {
-            title: 'Our Pedagogical Approach',
-            schedule: {
-              title: 'Flexible Schedule',
-              description: 'Schedules adapted to each student\'s needs for optimal learning.'
+          dashboard: {
+            welcome: 'Welcome',
+            stats: {
+              totalStudents: 'Total Students',
+              classes: 'Classes',
+              events: 'Events',
+              notifications: 'Notifications'
             },
-            classes: {
-              title: 'Small Class Sizes',
-              description: 'A conducive learning environment with personalized attention.'
+            recentActivity: 'Recent Activity',
+            upcomingEvents: 'Upcoming Events',
+            quickActions: 'Quick Actions',
+            performance: 'Performance Overview',
+            attendance: 'Attendance',
+            courses: {
+              myCourses: 'My Courses',
+              schedule: 'Schedule',
+              grades: 'Grades',
+              assignments: 'Assignments'
             },
-            program: {
-              title: 'Personalized Program',
-              description: 'Teaching adapted to each student\'s level and objectives.'
+            admin: {
+              userManagement: 'User Management',
+              settings: 'Settings',
+              reports: 'Reports',
+              systemHealth: 'System Health'
+            },
+            director: {
+              teacherManagement: 'Teacher Management',
+              classManagement: 'Class Management',
+              schoolMetrics: 'School Metrics',
+              admissions: 'Admissions'
+            },
+            teacher: {
+              myClasses: 'My Classes',
+              studentProgress: 'Student Progress',
+              lessonPlans: 'Lesson Plans',
+              gradeBook: 'Grade Book'
+            },
+            student: {
+              myProgress: 'My Progress',
+              nextClass: 'Next Class',
+              homework: 'Homework',
+              achievements: 'Achievements'
             }
           },
-          news: {
-            title: 'News',
-            location: 'Location'
-          },
-          subscription: {
-            title: 'Registration Request',
-            parentName: 'Parent Name',
-            parentEmail: 'Email',
-            parentPhone: 'Phone',
-            childName: 'Child Name',
-            childAge: 'Child Age',
-            currentSchool: 'Current School (optional)',
-            message: 'Message (optional)',
-            submit: 'Submit Registration Request',
-            success: 'Form submitted',
-            successMessage: 'We will contact you soon.',
-            error: 'Error',
-            errorMessage: 'An error occurred while submitting the form.'
-          },
-          login: {
-            title: 'Login',
-            subtitle: 'Sign in to your account',
+          common: {
+            loading: 'Loading...',
+            error: 'An error occurred',
+            success: 'Success',
+            save: 'Save',
+            cancel: 'Cancel',
+            edit: 'Edit',
+            delete: 'Delete',
+            view: 'View',
+            search: 'Search',
+            filter: 'Filter',
+            sort: 'Sort',
+            actions: 'Actions',
+            status: 'Status',
+            date: 'Date',
+            time: 'Time',
+            name: 'Name',
             email: 'Email',
-            password: 'Password',
-            submit: 'Sign in',
-            forgotPassword: 'Forgot password?',
-            noAccount: "Don't have an account?",
-            register: 'Register',
-            backToHome: 'Back to home'
+            phone: 'Phone',
+            address: 'Address',
+            role: 'Role',
+            submit: 'Submit',
+            back: 'Back',
+            next: 'Next',
+            previous: 'Previous',
+            logout: 'Logout',
+            profile: 'Profile',
+            settings: 'Settings',
+            help: 'Help',
+            about: 'About'
           }
         }
       },
       ar: {
         translation: {
-          hero: {
-            title: 'مرحباً بكم في مدرسة خليلية',
-            subtitle: 'التميز في التعليم لإعداد قادة الغد',
-            discoverBlog: 'اكتشف مدونتنا',
-            connectedSpace: 'الفضاء المتصل'
-          },
-          features: {
-            title: 'نهجنا التربوي',
-            schedule: {
-              title: 'جدول مرن',
-              description: 'جداول مكيفة حسب احتياجات كل طالب للتعلم الأمثل'
+          dashboard: {
+            welcome: 'مرحباً',
+            stats: {
+              totalStudents: 'إجمالي الطلاب',
+              classes: 'الفصول',
+              events: 'الفعاليات',
+              notifications: 'الإشعارات'
             },
-            classes: {
-              title: 'فصول صغيرة',
-              description: 'بيئة تعليمية مواتية مع اهتمام شخصي'
+            recentActivity: 'النشاط الأخير',
+            upcomingEvents: 'الفعاليات القادمة',
+            quickActions: 'إجراءات سريعة',
+            performance: 'نظرة عامة على الأداء',
+            attendance: 'الحضور',
+            courses: {
+              myCourses: 'دوراتي',
+              schedule: 'الجدول',
+              grades: 'الدرجات',
+              assignments: 'الواجبات'
             },
-            program: {
-              title: 'برنامج مخصص',
-              description: 'تعليم مكيف حسب مستوى وأهداف كل طالب'
+            admin: {
+              userManagement: 'إدارة المستخدمين',
+              settings: 'الإعدادات',
+              reports: 'التقارير',
+              systemHealth: 'صحة النظام'
+            },
+            director: {
+              teacherManagement: 'إدارة المعلمين',
+              classManagement: 'إدارة الفصول',
+              schoolMetrics: 'مقاييس المدرسة',
+              admissions: 'القبول'
+            },
+            teacher: {
+              myClasses: 'فصولي',
+              studentProgress: 'تقدم الطلاب',
+              lessonPlans: 'خطط الدروس',
+              gradeBook: 'سجل الدرجات'
+            },
+            student: {
+              myProgress: 'تقدمي',
+              nextClass: 'الفصل التالي',
+              homework: 'الواجب المنزلي',
+              achievements: 'الإنجازات'
             }
           },
-          news: {
-            title: 'الأخبار',
-            location: 'الموقع'
-          },
-          subscription: {
-            title: 'طلب التسجيل',
-            parentName: 'اسم الوالد',
-            parentEmail: 'البريد الإلكتروني',
-            parentPhone: 'الهاتف',
-            childName: 'اسم الطفل',
-            childAge: 'عمر الطفل',
-            currentSchool: 'المدرسة الحالية (اختياري)',
-            message: 'رسالة (اختياري)',
-            submit: 'إرسال طلب التسجيل',
-            success: 'تم إرسال النموذج',
-            successMessage: 'سنتصل بك قريباً',
-            error: 'خطأ',
-            errorMessage: 'حدث خطأ أثناء إرسال النموذج'
-          },
-          login: {
-            title: 'تسجيل الدخول',
-            subtitle: 'تسجيل الدخول إلى حسابك',
+          common: {
+            loading: 'جاري التحميل...',
+            error: 'حدث خطأ',
+            success: 'تم بنجاح',
+            save: 'حفظ',
+            cancel: 'إلغاء',
+            edit: 'تعديل',
+            delete: 'حذف',
+            view: 'عرض',
+            search: 'بحث',
+            filter: 'تصفية',
+            sort: 'ترتيب',
+            actions: 'إجراءات',
+            status: 'الحالة',
+            date: 'التاريخ',
+            time: 'الوقت',
+            name: 'الاسم',
             email: 'البريد الإلكتروني',
-            password: 'كلمة المرور',
-            submit: 'تسجيل الدخول',
-            forgotPassword: 'نسيت كلمة المرور؟',
-            noAccount: 'ليس لديك حساب؟',
-            register: 'تسجيل',
-            backToHome: 'العودة إلى الصفحة الرئيسية'
+            phone: 'الهاتف',
+            address: 'العنوان',
+            role: 'الدور',
+            submit: 'إرسال',
+            back: 'رجوع',
+            next: 'التالي',
+            previous: 'السابق',
+            logout: 'تسجيل الخروج',
+            profile: 'الملف الشخصي',
+            settings: 'الإعدادات',
+            help: 'المساعدة',
+            about: 'حول'
           }
         }
       },
       fr: {
         translation: {
-          hero: {
-            title: 'Bienvenue à l\'École Khalilia',
-            subtitle: 'Une éducation d\'excellence pour préparer les leaders de demain',
-            discoverBlog: 'Découvrir Notre Blog',
-            connectedSpace: 'Espace Connecté'
-          },
-          features: {
-            title: 'Notre Approche Pédagogique',
-            schedule: {
-              title: 'Emploi du temps flexible',
-              description: 'Des horaires adaptés aux besoins de chaque élève pour un apprentissage optimal.'
+          dashboard: {
+            welcome: 'Bienvenue',
+            stats: {
+              totalStudents: 'Total des Élèves',
+              classes: 'Classes',
+              events: 'Événements',
+              notifications: 'Notifications'
             },
-            classes: {
-              title: 'Classes à effectif réduit',
-              description: 'Un environnement propice à l\'apprentissage avec une attention personnalisée.'
+            recentActivity: 'Activité Récente',
+            upcomingEvents: 'Événements à Venir',
+            quickActions: 'Actions Rapides',
+            performance: 'Aperçu des Performances',
+            attendance: 'Présence',
+            courses: {
+              myCourses: 'Mes Cours',
+              schedule: 'Emploi du Temps',
+              grades: 'Notes',
+              assignments: 'Devoirs'
             },
-            program: {
-              title: 'Programme personnalisé',
-              description: 'Un enseignement adapté au niveau et aux objectifs de chaque élève.'
+            admin: {
+              userManagement: 'Gestion des Utilisateurs',
+              settings: 'Paramètres',
+              reports: 'Rapports',
+              systemHealth: 'État du Système'
+            },
+            director: {
+              teacherManagement: 'Gestion des Enseignants',
+              classManagement: 'Gestion des Classes',
+              schoolMetrics: 'Métriques de l\'École',
+              admissions: 'Admissions'
+            },
+            teacher: {
+              myClasses: 'Mes Classes',
+              studentProgress: 'Progrès des Élèves',
+              lessonPlans: 'Plans de Cours',
+              gradeBook: 'Carnet de Notes'
+            },
+            student: {
+              myProgress: 'Mon Progrès',
+              nextClass: 'Prochain Cours',
+              homework: 'Devoirs',
+              achievements: 'Réalisations'
             }
           },
-          news: {
-            title: 'Actualités',
-            location: 'Lieu'
-          },
-          subscription: {
-            title: 'Demande d\'inscription',
-            parentName: 'Nom du parent',
-            parentEmail: 'Email',
-            parentPhone: 'Téléphone',
-            childName: 'Nom de l\'enfant',
-            childAge: 'Âge de l\'enfant',
-            currentSchool: 'École actuelle (optionnel)',
-            message: 'Message (optionnel)',
-            submit: 'Envoyer la demande d\'inscription',
-            success: 'Formulaire envoyé',
-            successMessage: 'Nous vous contacterons bientôt.',
-            error: 'Erreur',
-            errorMessage: 'Une erreur est survenue lors de l\'envoi du formulaire.'
-          },
-          login: {
-            title: 'Connexion',
-            subtitle: 'Connectez-vous à votre compte',
+          common: {
+            loading: 'Chargement...',
+            error: 'Une erreur est survenue',
+            success: 'Succès',
+            save: 'Sauvegarder',
+            cancel: 'Annuler',
+            edit: 'Modifier',
+            delete: 'Supprimer',
+            view: 'Voir',
+            search: 'Rechercher',
+            filter: 'Filtrer',
+            sort: 'Trier',
+            actions: 'Actions',
+            status: 'Statut',
+            date: 'Date',
+            time: 'Heure',
+            name: 'Nom',
             email: 'Email',
-            password: 'Mot de passe',
-            submit: 'Se connecter',
-            forgotPassword: 'Mot de passe oublié ?',
-            noAccount: 'Vous n\'avez pas de compte ?',
-            register: 'S\'inscrire',
-            backToHome: 'Retour à l\'accueil'
+            phone: 'Téléphone',
+            address: 'Adresse',
+            role: 'Rôle',
+            submit: 'Envoyer',
+            back: 'Retour',
+            next: 'Suivant',
+            previous: 'Précédent',
+            logout: 'Déconnexion',
+            profile: 'Profil',
+            settings: 'Paramètres',
+            help: 'Aide',
+            about: 'À propos'
           }
         }
       }

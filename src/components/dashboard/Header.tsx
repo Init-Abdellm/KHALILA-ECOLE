@@ -5,6 +5,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/use-toast";
 import { Profile } from "@/lib/auth";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useTranslation } from "react-i18next";
+import LanguageSwitcher from "@/components/LanguageSwitcher";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -29,6 +31,7 @@ export const Header = ({
 }: HeaderProps) => {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
+  const { t } = useTranslation();
 
   const handleLogout = async () => {
     try {
@@ -37,8 +40,8 @@ export const Header = ({
       navigate('/login');
     } catch (error) {
       toast({
-        title: "Erreur",
-        description: "Une erreur est survenue lors de la déconnexion.",
+        title: t('common.error'),
+        description: t('common.error'),
         variant: "destructive",
       });
     }
@@ -66,15 +69,17 @@ export const Header = ({
                 className="h-12 w-auto"
               />
               <div>
-                <h1 className="text-xl md:text-2xl font-bold text-primary">{title}</h1>
+                <h1 className="text-xl md:text-2xl font-bold text-primary">{t(title)}</h1>
                 <p className="text-sm text-gray-600">
-                  {profile?.first_name} {profile?.last_name} - {role}
+                  {profile?.first_name} {profile?.last_name} - {t(`common.role.${role.toLowerCase()}`)}
                 </p>
               </div>
             </div>
           </div>
           
           <div className="flex items-center gap-2">
+            <LanguageSwitcher />
+            
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="icon" className="relative">
@@ -83,7 +88,7 @@ export const Header = ({
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56">
                 <DropdownMenuItem>
-                  Voir toutes les notifications
+                  {t('dashboard.notifications.viewAll')}
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -96,7 +101,7 @@ export const Header = ({
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56">
                 <DropdownMenuItem onClick={handleLogout}>
-                  Se déconnecter
+                  {t('common.logout')}
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
