@@ -51,6 +51,11 @@ const ProtectedRoute = ({ children, allowedRoles = [] }: { children: React.React
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
+  // Special case for admin user
+  if (user.email === 'admin' && allowedRoles.includes('admin')) {
+    return <>{children}</>;
+  }
+
   if (allowedRoles.length > 0 && (!profile?.role || !allowedRoles.includes(profile.role))) {
     console.log("Access denied - User role:", profile?.role);
     setTimeout(() => {
