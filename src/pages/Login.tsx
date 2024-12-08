@@ -18,6 +18,15 @@ const Login = () => {
   const { t } = useTranslation();
 
   useEffect(() => {
+    console.log("Login - User:", user);
+    console.log("Login - Profile:", profile);
+    
+    if (user?.email === 'admin@admin.com') {
+      const from = location.state?.from?.pathname || '/admin';
+      navigate(from, { replace: true });
+      return;
+    }
+
     if (user && profile) {
       const from = location.state?.from?.pathname || getDefaultRoute(profile.role);
       navigate(from, { replace: true });
@@ -66,6 +75,10 @@ const Login = () => {
           />
           <h1 className="text-2xl font-bold text-primary">{t('login.title')}</h1>
           <p className="text-gray-600">{t('login.subtitle')}</p>
+          {/* Add helper text for admin login */}
+          <p className="text-sm text-gray-500 mt-2">
+            {t('login.adminHelper', 'Admin login: admin@admin.com / admin')}
+          </p>
         </motion.div>
 
         <Card className="p-6 shadow-lg bg-white/80 backdrop-blur-sm border-0 ring-1 ring-black/5">
@@ -97,7 +110,7 @@ const Login = () => {
                   email_label: t('login.email'),
                   password_label: t('login.password'),
                   button_label: t('login.submit'),
-                  loading_button_label: 'Loading...',
+                  loading_button_label: t('login.loading'),
                   link_text: t('login.forgotPassword'),
                 },
               },

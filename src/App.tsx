@@ -52,7 +52,8 @@ const ProtectedRoute = ({ children, allowedRoles = [] }: { children: React.React
   }
 
   // Special case for admin user
-  if (user.email === 'admin' && allowedRoles.includes('admin')) {
+  if (user.email === 'admin@admin.com' && allowedRoles.includes('admin')) {
+    console.log("Admin access granted");
     return <>{children}</>;
   }
 
