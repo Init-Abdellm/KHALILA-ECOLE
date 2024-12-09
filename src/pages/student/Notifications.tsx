@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { toast } from "@/components/ui/use-toast";
 import { useTranslation } from "react-i18next";
 
-const TeacherNotifications = () => {
+const StudentNotifications = () => {
   const { profile } = useProfile();
   const navigate = useNavigate();
   const { t } = useTranslation();
@@ -60,7 +60,7 @@ const TeacherNotifications = () => {
   }
 
   return (
-    <DashboardLayout title="notifications.title" role="Professeur">
+    <DashboardLayout title="notifications.title" role="Étudiant">
       <div className="space-y-6">
         {isLoading ? (
           <div className="flex justify-center items-center h-32">
@@ -106,4 +106,4 @@ const TeacherNotifications = () => {
   );
 };
 
-export default TeacherNotifications;
+export default StudentNotifications;
