@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { Routes, Route } from "react-router-dom";
 import Landing from "@/pages/Landing";
 import Login from "@/pages/Login";
 import Register from "@/pages/Register";
@@ -47,45 +47,43 @@ function App() {
   }, [profile?.role]);
 
   return (
-    <Router>
-      <Routes>
-        {/* Public routes */}
-        <Route path="/" element={<Landing />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
-        <Route path="/blog" element={<Blog />} />
-        <Route path="/events" element={<Events />} />
+    <Routes>
+      {/* Public routes */}
+      <Route path="/" element={<Landing />} />
+      <Route path="/login" element={<Login />} />
+      <Route path="/register" element={<Register />} />
+      <Route path="/blog" element={<Blog />} />
+      <Route path="/events" element={<Events />} />
 
-        {/* Admin routes */}
-        <Route path="/admin" element={<AdminDashboard />} />
-        <Route path="/admin/users" element={<AdminUsers />} />
-        <Route path="/admin/stats" element={<AdminStats />} />
-        <Route path="/admin/settings" element={<AdminSettings />} />
-        <Route path="/admin/notifications" element={<AdminNotifications />} />
+      {/* Admin routes */}
+      <Route path="/admin" element={<AdminDashboard />} />
+      <Route path="/admin/users" element={<AdminUsers />} />
+      <Route path="/admin/stats" element={<AdminStats />} />
+      <Route path="/admin/settings" element={<AdminSettings />} />
+      <Route path="/admin/notifications" element={<AdminNotifications />} />
 
-        {/* Director routes */}
-        <Route path="/director" element={<DirectorDashboard />} />
-        <Route path="/director/teachers" element={<DirectorTeachers />} />
-        <Route path="/director/classes" element={<DirectorClasses />} />
-        <Route path="/director/reports" element={<DirectorReports />} />
-        <Route path="/director/notifications" element={<DirectorNotifications />} />
+      {/* Director routes */}
+      <Route path="/director" element={<DirectorDashboard />} />
+      <Route path="/director/teachers" element={<DirectorTeachers />} />
+      <Route path="/director/classes" element={<DirectorClasses />} />
+      <Route path="/director/reports" element={<DirectorReports />} />
+      <Route path="/director/notifications" element={<DirectorNotifications />} />
 
-        {/* Teacher routes */}
-        <Route path="/teacher" element={<TeacherDashboard />} />
-        <Route path="/teacher/courses" element={<TeacherCourses />} />
-        <Route path="/teacher/students" element={<TeacherStudents />} />
-        <Route path="/teacher/schedule" element={<TeacherSchedule />} />
-        <Route path="/teacher/grades" element={<TeacherGrades />} />
-        <Route path="/teacher/notifications" element={<TeacherNotifications />} />
+      {/* Teacher routes */}
+      <Route path="/teacher" element={<TeacherDashboard />} />
+      <Route path="/teacher/courses" element={<TeacherCourses />} />
+      <Route path="/teacher/students" element={<TeacherStudents />} />
+      <Route path="/teacher/schedule" element={<TeacherSchedule />} />
+      <Route path="/teacher/grades" element={<TeacherGrades />} />
+      <Route path="/teacher/notifications" element={<TeacherNotifications />} />
 
-        {/* Student routes */}
-        <Route path="/student" element={<StudentDashboard />} />
-        <Route path="/student/courses" element={<StudentCourses />} />
-        <Route path="/student/schedule" element={<StudentSchedule />} />
-        <Route path="/student/grades" element={<StudentGrades />} />
-        <Route path="/student/notifications" element={<StudentNotifications />} />
-      </Routes>
-    </Router>
+      {/* Student routes */}
+      <Route path="/student" element={<StudentDashboard />} />
+      <Route path="/student/courses" element={<StudentCourses />} />
+      <Route path="/student/schedule" element={<StudentSchedule />} />
+      <Route path="/student/grades" element={<StudentGrades />} />
+      <Route path="/student/notifications" element={<StudentNotifications />} />
+    </Routes>
   );
 }
 
