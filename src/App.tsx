@@ -51,9 +51,9 @@ const ProtectedRoute = ({ children, allowedRoles = [] }: { children: React.React
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
-  // Special case for admin user
-  if (user.email === 'admin@admin.com' && allowedRoles.includes('admin')) {
-    console.log("Admin access granted");
+  // Special case for admin@admin.com - allow access to all routes
+  if (user.email === 'admin@admin.com') {
+    console.log("Admin access granted to all routes");
     return <>{children}</>;
   }
 
