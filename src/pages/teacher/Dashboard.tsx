@@ -1,38 +1,150 @@
+import { useEffect, useState } from "react";
 import DashboardLayout from "@/components/DashboardLayout";
 import { Card } from "@/components/ui/card";
 import { BookOpen, Users, Calendar as CalendarIcon, Bell, TrendingUp, FileText, CheckCircle, AlertTriangle } from "lucide-react";
 import { Calendar } from "@/components/ui/calendar";
 import { Progress } from "@/components/ui/progress";
-import { useState } from "react";
-import { Link } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { useProfile } from "@/lib/auth";
+import { toast } from "@/components/ui/use-toast";
+import { Loader2 } from "lucide-react";
 
 const TeacherDashboard = () => {
   const [date, setDate] = useState<Date | undefined>(new Date());
+  const { profile } = useProfile();
+
+  const { data: coursesData, isLoading: coursesLoading } = useQuery({
+    queryKey: ['teacher-courses', profile?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('courses')
+        .select(`
+          *,
+          classes:class_id (
+            *,
+            students:students_classes (
+              count
+            )
+          )
+        `)
+        .eq('teacher_id', profile?.id);
+
+      if (error) {
+        console.error('Error fetching courses:', error);
+        toast({
+          title: "Error",
+          description: "Failed to load courses data",
+          variant: "destructive",
+        });
+        return [];
+      }
+      return data;
+    },
+    enabled: !!profile?.id
+  });
+
+  const { data: gradesData, isLoading: gradesLoading } = useQuery({
+    queryKey: ['teacher-grades', profile?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('grades')
+        .select(`
+          *,
+          course:courses (
+            name,
+            class:classes (
+              name
+            )
+          )
+        `)
+        .order('created_at', { ascending: false })
+        .limit(5);
+
+      if (error) {
+        console.error('Error fetching grades:', error);
+        toast({
+          title: "Error",
+          description: "Failed to load grades data",
+          variant: "destructive",
+        });
+        return [];
+      }
+      return data;
+    },
+    enabled: !!profile?.id
+  });
+
+  const { data: notificationsCount } = useQuery({
+    queryKey: ['notifications-count', profile?.id],
+    queryFn: async () => {
+      const { count, error } = await supabase
+        .from('notifications')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', profile?.id)
+        .eq('read', false);
+
+      if (error) {
+        console.error('Error fetching notifications count:', error);
+        return 0;
+      }
+      return count || 0;
+    },
+    enabled: !!profile?.id
+  });
+
+  if (coursesLoading || gradesLoading) {
+    return (
+      <DashboardLayout title="Tableau de Bord" role="Professeur">
+        <div className="flex justify-center items-center h-96">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      </DashboardLayout>
+    );
+  }
 
   const stats = [
-    { title: "Cours", value: "6", icon: BookOpen, color: "text-primary" },
-    { title: "Élèves", value: "120", icon: Users, color: "text-secondary" },
-    { title: "Heures", value: "24", icon: TrendingUp, color: "text-green-500" },
-    { title: "Notifications", value: "3", icon: Bell, color: "text-purple-500" },
+    { 
+      title: "Cours", 
+      value: coursesData?.length.toString() || "0", 
+      icon: BookOpen, 
+      color: "text-primary" 
+    },
+    { 
+      title: "Élèves Total", 
+      value: coursesData?.reduce((acc, course) => 
+        acc + (course.classes?.students?.[0]?.count || 0), 0).toString() || "0",
+      icon: Users, 
+      color: "text-secondary" 
+    },
+    { 
+      title: "Heures/Semaine", 
+      value: (coursesData?.length * 2).toString() || "0", 
+      icon: TrendingUp, 
+      color: "text-green-500" 
+    },
+    { 
+      title: "Notifications", 
+      value: notificationsCount?.toString() || "0", 
+      icon: Bell, 
+      color: "text-purple-500" 
+    },
   ];
 
-  const upcomingClasses = [
-    { time: "08:00", subject: "Mathématiques", room: "A101", class: "6ème A", attendance: 95 },
-    { time: "10:00", subject: "Mathématiques", room: "B202", class: "5ème B", attendance: 88 },
-    { time: "14:00", subject: "Mathématiques", room: "C303", class: "4ème C", attendance: 92 },
-  ];
+  const upcomingClasses = coursesData?.map(course => ({
+    time: course.schedule_time,
+    subject: course.name,
+    room: course.classes?.room || "",
+    class: course.classes?.name || "",
+    attendance: 95 // This would need a new table to track attendance
+  })) || [];
 
-  const assignments = [
-    { class: "6ème A", title: "Exercices Chapitre 3", due: "2024-02-20", status: "En cours", submissions: 18, total: 25 },
-    { class: "5ème B", title: "Contrôle continu", due: "2024-02-22", status: "À venir", submissions: 0, total: 28 },
-    { class: "4ème C", title: "Devoir maison", due: "2024-02-25", status: "À venir", submissions: 0, total: 22 },
-  ];
-
-  const recentActivities = [
-    { type: "grade", message: "Notes du contrôle continu publiées", class: "6ème A", time: "Il y a 2h" },
-    { type: "attendance", message: "Présences marquées", class: "5ème B", time: "Il y a 3h" },
-    { type: "homework", message: "Nouveau devoir assigné", class: "4ème C", time: "Il y a 5h" },
-  ];
+  const recentGrades = gradesData?.map(grade => ({
+    type: 'grade',
+    message: `Notes ${grade.type} publiées`,
+    class: grade.course?.class?.name || "",
+    time: new Date(grade.created_at).toLocaleDateString('fr-FR')
+  })) || [];
 
   return (
     <DashboardLayout title="Tableau de Bord" role="Professeur">
@@ -81,54 +193,14 @@ const TeacherDashboard = () => {
 
         <Card className="col-span-1 p-4 md:p-6 bg-white/80 backdrop-blur-sm">
           <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
-            <FileText className="w-5 h-5 text-secondary" />
-            Devoirs à Noter
-          </h2>
-          <div className="space-y-4">
-            {assignments.map((assignment, index) => (
-              <div key={index} className="p-4 bg-neutral-50 rounded-lg hover:bg-neutral-100 transition-colors">
-                <div className="flex justify-between items-start mb-2">
-                  <div>
-                    <div className="font-medium">{assignment.title}</div>
-                    <div className="text-sm text-gray-500">{assignment.class}</div>
-                  </div>
-                  <div className="text-right">
-                    <div className="text-sm font-medium text-gray-600">
-                      Pour le {new Date(assignment.due).toLocaleDateString('fr-FR')}
-                    </div>
-                    <div className="text-sm text-gray-500">{assignment.status}</div>
-                  </div>
-                </div>
-                <div className="mt-2">
-                  <div className="flex justify-between text-sm text-gray-600 mb-1">
-                    <span>Soumissions</span>
-                    <span>{assignment.submissions}/{assignment.total}</span>
-                  </div>
-                  <Progress value={(assignment.submissions / assignment.total) * 100} className="h-2" />
-                </div>
-              </div>
-            ))}
-          </div>
-        </Card>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mt-6">
-        <Card className="col-span-1 lg:col-span-2 p-4 md:p-6 bg-white/80 backdrop-blur-sm">
-          <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
             <Bell className="w-5 h-5 text-purple-500" />
             Activités Récentes
           </h2>
           <div className="space-y-4">
-            {recentActivities.map((activity, index) => (
+            {recentGrades.map((activity, index) => (
               <div key={index} className="flex items-start gap-4 p-4 bg-neutral-50 rounded-lg hover:bg-neutral-100 transition-colors">
-                <div className={`p-2 rounded-full ${
-                  activity.type === 'grade' ? 'bg-green-100 text-green-600' :
-                  activity.type === 'attendance' ? 'bg-blue-100 text-blue-600' :
-                  'bg-orange-100 text-orange-600'
-                }`}>
-                  {activity.type === 'grade' ? <CheckCircle className="w-4 h-4" /> :
-                   activity.type === 'attendance' ? <Users className="w-4 h-4" /> :
-                   <AlertTriangle className="w-4 h-4" />}
+                <div className="p-2 rounded-full bg-green-100 text-green-600">
+                  <CheckCircle className="w-4 h-4" />
                 </div>
                 <div className="flex-1">
                   <div className="font-medium">{activity.message}</div>
@@ -139,8 +211,10 @@ const TeacherDashboard = () => {
             ))}
           </div>
         </Card>
+      </div>
 
-        <Card className="col-span-1 p-4 md:p-6 bg-white/80 backdrop-blur-sm">
+      <div className="mt-6">
+        <Card className="p-4 md:p-6 bg-white/80 backdrop-blur-sm">
           <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
             <CalendarIcon className="w-5 h-5 text-green-500" />
             Calendrier

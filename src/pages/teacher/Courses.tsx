@@ -1,66 +1,101 @@
+import { useEffect } from "react";
 import DashboardLayout from "@/components/DashboardLayout";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { BookOpen, Users, Clock } from "lucide-react";
+import { BookOpen, Users, Clock, Loader2 } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { useProfile } from "@/lib/auth";
+import { toast } from "@/components/ui/use-toast";
+import { useNavigate } from "react-router-dom";
 
 const Courses = () => {
-  const courses = [
-    {
-      id: 1,
-      name: "Mathématiques",
-      class: "6ème A",
-      students: 30,
-      hours: 4,
-      nextSession: "Lundi, 08:00",
+  const { profile } = useProfile();
+  const navigate = useNavigate();
+
+  const { data: courses, isLoading } = useQuery({
+    queryKey: ['teacher-courses', profile?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('courses')
+        .select(`
+          *,
+          classes:class_id (
+            *,
+            students:students_classes (
+              count
+            )
+          )
+        `)
+        .eq('teacher_id', profile?.id);
+
+      if (error) {
+        console.error('Error fetching courses:', error);
+        toast({
+          title: "Error",
+          description: "Failed to load courses",
+          variant: "destructive",
+        });
+        return [];
+      }
+      return data;
     },
-    {
-      id: 2,
-      name: "Mathématiques",
-      class: "5ème B",
-      students: 28,
-      hours: 4,
-      nextSession: "Lundi, 10:00",
-    },
-    {
-      id: 3,
-      name: "Mathématiques",
-      class: "4ème C",
-      students: 32,
-      hours: 4,
-      nextSession: "Lundi, 14:00",
-    },
-  ];
+    enabled: !!profile?.id
+  });
+
+  if (isLoading) {
+    return (
+      <DashboardLayout title="Mes Cours" role="Professeur">
+        <div className="flex justify-center items-center h-96">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      </DashboardLayout>
+    );
+  }
 
   return (
     <DashboardLayout title="Mes Cours" role="Professeur">
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {courses.map((course) => (
+        {courses?.map((course) => (
           <Card key={course.id} className="p-4 md:p-6">
             <div className="flex flex-col h-full">
               <div className="flex items-center justify-between mb-4">
                 <div className="p-2 rounded-full bg-primary/10">
                   <BookOpen className="w-5 h-5 text-primary" />
                 </div>
-                <span className="text-sm font-medium text-gray-500">{course.nextSession}</span>
+                <span className="text-sm font-medium text-gray-500">
+                  {course.schedule_day}, {course.schedule_time}
+                </span>
               </div>
               
               <h3 className="text-lg font-semibold mb-2">{course.name}</h3>
-              <p className="text-gray-600 mb-4">{course.class}</p>
+              <p className="text-gray-600 mb-4">{course.classes?.name}</p>
               
               <div className="flex items-center gap-4 text-sm text-gray-600 mt-auto">
                 <div className="flex items-center gap-1">
                   <Users className="w-4 h-4" />
-                  <span>{course.students} élèves</span>
+                  <span>{course.classes?.students?.[0]?.count || 0} élèves</span>
                 </div>
                 <div className="flex items-center gap-1">
                   <Clock className="w-4 h-4" />
-                  <span>{course.hours}h/semaine</span>
+                  <span>2h/semaine</span>
                 </div>
               </div>
               
               <div className="mt-4 flex gap-2">
-                <Button variant="outline" className="w-full">Détails</Button>
-                <Button className="w-full">Notes</Button>
+                <Button 
+                  variant="outline" 
+                  className="w-full"
+                  onClick={() => navigate(`/teacher/courses/${course.id}`)}
+                >
+                  Détails
+                </Button>
+                <Button 
+                  className="w-full"
+                  onClick={() => navigate(`/teacher/grades?course=${course.id}`)}
+                >
+                  Notes
+                </Button>
               </div>
             </div>
           </Card>
