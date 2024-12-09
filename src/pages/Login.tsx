@@ -9,6 +9,7 @@ import { motion } from "framer-motion";
 import { ArrowLeft } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
+import { toast } from "@/components/ui/use-toast";
 
 const Login = () => {
   const navigate = useNavigate();
@@ -22,12 +23,14 @@ const Login = () => {
     console.log("Login - Profile:", profile);
     
     if (user?.email === 'admin@admin.com') {
+      console.log("Admin user detected, redirecting to admin dashboard");
       const from = location.state?.from?.pathname || '/admin';
       navigate(from, { replace: true });
       return;
     }
 
     if (user && profile) {
+      console.log("User and profile found, redirecting to dashboard");
       const from = location.state?.from?.pathname || getDefaultRoute(profile.role);
       navigate(from, { replace: true });
     }
@@ -47,6 +50,36 @@ const Login = () => {
         return '/';
     }
   };
+
+  // Handle auth state change
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      console.log("Auth state changed:", event, session);
+      
+      if (event === 'SIGNED_IN') {
+        toast({
+          title: "Connexion réussie",
+          description: "Vous êtes maintenant connecté.",
+        });
+      } else if (event === 'SIGNED_OUT') {
+        toast({
+          title: "Déconnexion",
+          description: "Vous avez été déconnecté.",
+        });
+      } else if (event === 'USER_UPDATED') {
+        console.log("User updated:", session);
+      } else if (event === 'PASSWORD_RECOVERY') {
+        toast({
+          title: "Réinitialisation du mot de passe",
+          description: "Veuillez vérifier votre email pour réinitialiser votre mot de passe.",
+        });
+      }
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, []);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/5 to-secondary/5 flex items-center justify-center p-4">
@@ -75,9 +108,8 @@ const Login = () => {
           />
           <h1 className="text-2xl font-bold text-primary">{t('login.title')}</h1>
           <p className="text-gray-600">{t('login.subtitle')}</p>
-          {/* Add helper text for admin login */}
           <p className="text-sm text-gray-500 mt-2">
-            {t('login.adminHelper', 'Admin login: admin@admin.com / admin')}
+            Admin test: admin@admin.com / admin
           </p>
         </motion.div>
 
@@ -104,6 +136,16 @@ const Login = () => {
             }}
             providers={[]}
             redirectTo={window.location.origin}
+            onError={(error) => {
+              console.error("Auth error:", error);
+              toast({
+                title: "Erreur de connexion",
+                description: error.message === "Invalid login credentials" 
+                  ? "Email ou mot de passe incorrect"
+                  : "Une erreur est survenue lors de la connexion",
+                variant: "destructive",
+              });
+            }}
             localization={{
               variables: {
                 sign_in: {
