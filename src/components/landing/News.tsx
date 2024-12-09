@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
 import { CalendarDays } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 interface Event {
   id: string;
@@ -15,18 +16,38 @@ interface Event {
 
 const News = () => {
   const [events, setEvents] = useState<Event[]>([]);
+  const { toast } = useToast();
 
-  const { data: initialEvents, isLoading } = useQuery({
+  const { data: initialEvents, isLoading, error } = useQuery({
     queryKey: ["events"],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("events")
-        .select("*")
-        .order("date", { ascending: true })
-        .limit(3);
+      console.log("Fetching events...");
+      try {
+        const { data, error } = await supabase
+          .from("events")
+          .select("*")
+          .order("date", { ascending: true })
+          .limit(3);
 
-      if (error) throw error;
-      return data as Event[];
+        if (error) {
+          console.error("Supabase error:", error);
+          throw error;
+        }
+        
+        console.log("Fetched events:", data);
+        return data as Event[];
+      } catch (err) {
+        console.error("Error fetching events:", err);
+        throw err;
+      }
+    },
+    onError: (err) => {
+      console.error("Query error:", err);
+      toast({
+        title: "Error",
+        description: "Failed to load events. Please try again later.",
+        variant: "destructive",
+      });
     },
   });
 
@@ -37,6 +58,7 @@ const News = () => {
   }, [initialEvents]);
 
   useEffect(() => {
+    console.log("Setting up realtime subscription...");
     const channel = supabase
       .channel("events-changes")
       .on(
@@ -48,24 +70,52 @@ const News = () => {
         },
         async (payload) => {
           console.log("Real-time event update:", payload);
-          // Refresh the events data
-          const { data, error } = await supabase
-            .from("events")
-            .select("*")
-            .order("date", { ascending: true })
-            .limit(3);
+          try {
+            const { data, error } = await supabase
+              .from("events")
+              .select("*")
+              .order("date", { ascending: true })
+              .limit(3);
 
-          if (!error && data) {
-            setEvents(data);
+            if (error) {
+              console.error("Error refreshing events:", error);
+              throw error;
+            }
+
+            if (data) {
+              console.log("Updated events:", data);
+              setEvents(data);
+            }
+          } catch (err) {
+            console.error("Failed to refresh events:", err);
+            toast({
+              title: "Error",
+              description: "Failed to refresh events. Please try again later.",
+              variant: "destructive",
+            });
           }
         }
       )
       .subscribe();
 
     return () => {
+      console.log("Cleaning up realtime subscription...");
       supabase.removeChannel(channel);
     };
-  }, []);
+  }, [toast]);
+
+  if (error) {
+    return (
+      <div className="py-12">
+        <div className="container mx-auto px-4">
+          <h2 className="text-3xl font-bold text-center mb-8">Actualités</h2>
+          <Card className="p-6 text-center text-red-600">
+            Une erreur est survenue lors du chargement des événements.
+          </Card>
+        </div>
+      </div>
+    );
+  }
 
   if (isLoading) {
     return (
