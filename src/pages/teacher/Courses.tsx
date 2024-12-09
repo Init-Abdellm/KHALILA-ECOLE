@@ -9,6 +9,19 @@ import { useProfile } from "@/lib/auth";
 import { toast } from "@/components/ui/use-toast";
 import { useNavigate } from "react-router-dom";
 
+interface CourseWithClass {
+  id: string;
+  name: string;
+  schedule_day: string;
+  schedule_time: string;
+  classes: {
+    name: string;
+    students_classes: {
+      count: number;
+    }[];
+  };
+}
+
 const Courses = () => {
   const { profile } = useProfile();
   const navigate = useNavigate();
@@ -20,11 +33,9 @@ const Courses = () => {
         .from('courses')
         .select(`
           *,
-          classes:class_id (
-            *,
-            students:students_classes (
-              count
-            )
+          classes (
+            name,
+            students_classes (count)
           )
         `)
         .eq('teacher_id', profile?.id);
@@ -38,7 +49,7 @@ const Courses = () => {
         });
         return [];
       }
-      return data;
+      return data as CourseWithClass[];
     },
     enabled: !!profile?.id
   });
@@ -74,7 +85,7 @@ const Courses = () => {
               <div className="flex items-center gap-4 text-sm text-gray-600 mt-auto">
                 <div className="flex items-center gap-1">
                   <Users className="w-4 h-4" />
-                  <span>{course.classes?.students?.[0]?.count || 0} élèves</span>
+                  <span>{course.classes?.students_classes?.[0]?.count || 0} élèves</span>
                 </div>
                 <div className="flex items-center gap-1">
                   <Clock className="w-4 h-4" />

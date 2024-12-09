@@ -10,6 +10,31 @@ import { useProfile } from "@/lib/auth";
 import { toast } from "@/components/ui/use-toast";
 import { Loader2 } from "lucide-react";
 
+interface CourseWithClass {
+  id: string;
+  name: string;
+  schedule_time: string;
+  classes: {
+    name: string;
+    room: string;
+    students_classes: {
+      count: number;
+    }[];
+  };
+}
+
+interface Grade {
+  id: string;
+  type: string;
+  created_at: string;
+  course: {
+    name: string;
+    class: {
+      name: string;
+    };
+  };
+}
+
 const TeacherDashboard = () => {
   const [date, setDate] = useState<Date | undefined>(new Date());
   const { profile } = useProfile();
@@ -21,11 +46,10 @@ const TeacherDashboard = () => {
         .from('courses')
         .select(`
           *,
-          classes:class_id (
-            *,
-            students:students_classes (
-              count
-            )
+          classes (
+            name,
+            room,
+            students_classes (count)
           )
         `)
         .eq('teacher_id', profile?.id);
@@ -39,7 +63,7 @@ const TeacherDashboard = () => {
         });
         return [];
       }
-      return data;
+      return data as CourseWithClass[];
     },
     enabled: !!profile?.id
   });
@@ -70,7 +94,7 @@ const TeacherDashboard = () => {
         });
         return [];
       }
-      return data;
+      return data as Grade[];
     },
     enabled: !!profile?.id
   });
@@ -113,7 +137,7 @@ const TeacherDashboard = () => {
     { 
       title: "Élèves Total", 
       value: coursesData?.reduce((acc, course) => 
-        acc + (course.classes?.students?.[0]?.count || 0), 0).toString() || "0",
+        acc + (course.classes?.students_classes?.[0]?.count || 0), 0).toString() || "0",
       icon: Users, 
       color: "text-secondary" 
     },
@@ -136,7 +160,7 @@ const TeacherDashboard = () => {
     subject: course.name,
     room: course.classes?.room || "",
     class: course.classes?.name || "",
-    attendance: 95 // This would need a new table to track attendance
+    attendance: 95
   })) || [];
 
   const recentGrades = gradesData?.map(grade => ({
