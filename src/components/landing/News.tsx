@@ -41,14 +41,10 @@ const News = () => {
         throw err;
       }
     },
-    onError: (err) => {
-      console.error("Query error:", err);
-      toast({
-        title: "Error",
-        description: "Failed to load events. Please try again later.",
-        variant: "destructive",
-      });
+    meta: {
+      errorMessage: "Failed to load events. Please try again later.",
     },
+    retry: 3,
   });
 
   useEffect(() => {
@@ -56,6 +52,16 @@ const News = () => {
       setEvents(initialEvents);
     }
   }, [initialEvents]);
+
+  useEffect(() => {
+    if (error) {
+      toast({
+        title: "Error",
+        description: "Failed to load events. Please try again later.",
+        variant: "destructive",
+      });
+    }
+  }, [error, toast]);
 
   useEffect(() => {
     console.log("Setting up realtime subscription...");
