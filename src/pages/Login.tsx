@@ -73,6 +73,12 @@ const Login = () => {
           title: "Réinitialisation du mot de passe",
           description: "Veuillez vérifier votre email pour réinitialiser votre mot de passe.",
         });
+      } else if (event === 'USER_DELETED') {
+        toast({
+          title: "Erreur de connexion",
+          description: "Email ou mot de passe incorrect",
+          variant: "destructive",
+        });
       }
     });
 
@@ -136,16 +142,6 @@ const Login = () => {
             }}
             providers={[]}
             redirectTo={window.location.origin}
-            onError={(error) => {
-              console.error("Auth error:", error);
-              toast({
-                title: "Erreur de connexion",
-                description: error.message === "Invalid login credentials" 
-                  ? "Email ou mot de passe incorrect"
-                  : "Une erreur est survenue lors de la connexion",
-                variant: "destructive",
-              });
-            }}
             localization={{
               variables: {
                 sign_in: {
