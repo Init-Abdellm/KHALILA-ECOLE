@@ -73,12 +73,6 @@ const Login = () => {
           title: "Réinitialisation du mot de passe",
           description: "Veuillez vérifier votre email pour réinitialiser votre mot de passe.",
         });
-      } else if (event === 'USER_DELETED') {
-        toast({
-          title: "Erreur de connexion",
-          description: "Email ou mot de passe incorrect",
-          variant: "destructive",
-        });
       }
     });
 
