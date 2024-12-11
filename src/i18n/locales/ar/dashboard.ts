@@ -2,12 +2,12 @@ export default {
   welcome: 'مرحباً',
   stats: {
     totalStudents: 'إجمالي الطلاب',
-    classes: 'الفصول',
-    events: 'الفعاليات',
-    notifications: 'الإشعارات'
+    totalTeachers: 'إجمالي المعلمين',
+    totalClasses: 'إجمالي الفصول',
+    totalCourses: 'إجمالي الدورات'
   },
   recentActivity: 'النشاط الأخير',
-  upcomingEvents: 'الفعاليات القادمة',
+  upcomingEvents: 'الأحداث القادمة',
   quickActions: 'إجراءات سريعة',
   performance: 'نظرة عامة على الأداء',
   attendance: 'الحضور',

@@ -6,8 +6,11 @@ import { Eye, Mail, Phone, Loader2 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { UserManagementDialog } from "@/components/admin/UserManagementDialog";
+import { useTranslation } from "react-i18next";
 
 const Users = () => {
+  const { t } = useTranslation();
+
   const { data: users, isLoading } = useQuery({
     queryKey: ['users'],
     queryFn: async () => {
@@ -23,7 +26,7 @@ const Users = () => {
 
   if (isLoading) {
     return (
-      <DashboardLayout title="Gestion des Utilisateurs" role="Administration">
+      <DashboardLayout title={t('admin.users.title')} role="Administration">
         <div className="flex justify-center items-center h-96">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
         </div>
@@ -32,22 +35,22 @@ const Users = () => {
   }
 
   return (
-    <DashboardLayout title="Gestion des Utilisateurs" role="Administration">
+    <DashboardLayout title={t('admin.users.title')} role="Administration">
       <Card className="p-6">
         <div className="flex justify-between items-center mb-6">
-          <h2 className="text-xl font-semibold">Liste des Utilisateurs</h2>
+          <h2 className="text-xl font-semibold">{t('admin.users.list')}</h2>
           <UserManagementDialog />
         </div>
         <div className="overflow-x-auto">
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Nom</TableHead>
-                <TableHead>Rôle</TableHead>
-                <TableHead className="hidden md:table-cell">Email</TableHead>
-                <TableHead className="hidden md:table-cell">Téléphone</TableHead>
-                <TableHead>Statut</TableHead>
-                <TableHead>Actions</TableHead>
+                <TableHead>{t('admin.users.columns.name')}</TableHead>
+                <TableHead>{t('admin.users.columns.role')}</TableHead>
+                <TableHead className="hidden md:table-cell">{t('admin.users.columns.email')}</TableHead>
+                <TableHead className="hidden md:table-cell">{t('admin.users.columns.phone')}</TableHead>
+                <TableHead>{t('admin.users.columns.status')}</TableHead>
+                <TableHead>{t('admin.users.columns.actions')}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>

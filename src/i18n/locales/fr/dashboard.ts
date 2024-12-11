@@ -18,27 +18,43 @@ export default {
     assignments: 'Devoirs'
   },
   admin: {
-    userManagement: 'Gestion des Utilisateurs',
-    settings: 'Paramètres',
-    reports: 'Rapports',
-    systemHealth: 'État du Système'
-  },
-  director: {
-    teacherManagement: 'Gestion des Enseignants',
-    classManagement: 'Gestion des Classes',
-    schoolMetrics: 'Métriques de l\'École',
-    admissions: 'Admissions'
-  },
-  teacher: {
-    myClasses: 'Mes Classes',
-    studentProgress: 'Progrès des Élèves',
-    lessonPlans: 'Plans de Cours',
-    gradeBook: 'Carnet de Notes'
-  },
-  student: {
-    myProgress: 'Mon Progrès',
-    nextClass: 'Prochain Cours',
-    homework: 'Devoirs',
-    achievements: 'Réalisations'
+    dashboard: {
+      title: "Tableau de Bord",
+      stats: {
+        totalStudents: "Total des Élèves",
+        totalTeachers: "Total des Professeurs",
+        totalClasses: "Total des Classes",
+        totalCourses: "Total des Cours"
+      },
+      recentActivity: "Activité Récente",
+      upcomingEvents: "Événements à Venir"
+    },
+    users: {
+      title: "Gestion des Utilisateurs",
+      list: "Liste des Utilisateurs",
+      add: "Ajouter un Utilisateur",
+      edit: "Modifier un Utilisateur",
+      delete: "Supprimer un Utilisateur",
+      columns: {
+        name: "Nom",
+        role: "Rôle",
+        email: "Email",
+        phone: "Téléphone",
+        status: "Statut",
+        actions: "Actions"
+      }
+    },
+    stats: {
+      title: "Statistiques",
+      monthlySignups: "Inscriptions Mensuelles",
+      metrics: "Métriques Clés"
+    },
+    settings: {
+      title: "Paramètres",
+      general: "Paramètres Généraux",
+      school: "Informations de l'École",
+      notifications: "Paramètres de Notification",
+      theme: "Paramètres du Thème"
+    }
   }
 };

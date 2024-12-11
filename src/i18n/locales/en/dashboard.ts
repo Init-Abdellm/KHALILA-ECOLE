@@ -2,43 +2,50 @@ export default {
   welcome: 'Welcome',
   stats: {
     totalStudents: 'Total Students',
-    classes: 'Classes',
-    events: 'Events',
-    notifications: 'Notifications'
+    totalTeachers: 'Total Teachers',
+    totalClasses: 'Total Classes',
+    totalCourses: 'Total Courses'
   },
   recentActivity: 'Recent Activity',
   upcomingEvents: 'Upcoming Events',
-  quickActions: 'Quick Actions',
-  performance: 'Performance Overview',
-  attendance: 'Attendance',
-  courses: {
-    myCourses: 'My Courses',
-    schedule: 'Schedule',
-    grades: 'Grades',
-    assignments: 'Assignments'
-  },
   admin: {
-    userManagement: 'User Management',
-    settings: 'Settings',
-    reports: 'Reports',
-    systemHealth: 'System Health'
-  },
-  director: {
-    teacherManagement: 'Teacher Management',
-    classManagement: 'Class Management',
-    schoolMetrics: 'School Metrics',
-    admissions: 'Admissions'
-  },
-  teacher: {
-    myClasses: 'My Classes',
-    studentProgress: 'Student Progress',
-    lessonPlans: 'Lesson Plans',
-    gradeBook: 'Grade Book'
-  },
-  student: {
-    myProgress: 'My Progress',
-    nextClass: 'Next Class',
-    homework: 'Homework',
-    achievements: 'Achievements'
+    dashboard: {
+      title: "Dashboard",
+      stats: {
+        totalStudents: "Total Students",
+        totalTeachers: "Total Teachers",
+        totalClasses: "Total Classes",
+        totalCourses: "Total Courses"
+      },
+      recentActivity: "Recent Activity",
+      upcomingEvents: "Upcoming Events"
+    },
+    users: {
+      title: "User Management",
+      list: "User List",
+      add: "Add User",
+      edit: "Edit User",
+      delete: "Delete User",
+      columns: {
+        name: "Name",
+        role: "Role",
+        email: "Email",
+        phone: "Phone",
+        status: "Status",
+        actions: "Actions"
+      }
+    },
+    stats: {
+      title: "Statistics",
+      monthlySignups: "Monthly Signups",
+      metrics: "Key Metrics"
+    },
+    settings: {
+      title: "Settings",
+      general: "General Settings",
+      school: "School Information",
+      notifications: "Notification Settings",
+      theme: "Theme Settings"
+    }
   }
 };

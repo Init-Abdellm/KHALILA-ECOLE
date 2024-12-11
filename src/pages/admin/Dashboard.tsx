@@ -1,72 +1,78 @@
 import { useEffect, useState } from "react";
 import DashboardLayout from "@/components/DashboardLayout";
 import { Card } from "@/components/ui/card";
-import { Users, BookOpen, Calendar, Bell } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
-import type { Profile, Class, Event, Notification } from "@/types/database";
+import { useTranslation } from "react-i18next";
+import { Users, BookOpen, School, Bell } from "lucide-react";
 
 const AdminDashboard = () => {
-  const [stats, setStats] = useState({
-    students: 0,
-    classes: 0,
-    events: 0,
-    notifications: 0
-  });
+  const { t } = useTranslation();
   const { toast } = useToast();
 
-  useEffect(() => {
-    fetchStats();
-  }, []);
+  const { data: stats, isLoading } = useQuery({
+    queryKey: ['admin-stats'],
+    queryFn: async () => {
+      try {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('role, count(*)')
+          .group('role');
 
-  const fetchStats = async () => {
-    try {
-      // Fetch students count
-      const { count: studentsCount } = await supabase
-        .from('profiles')
-        .select('*', { count: 'exact', head: true })
-        .eq('role', 'student');
+        if (error) throw error;
 
-      // Fetch classes count
-      const { count: classesCount } = await supabase
-        .from('classes')
-        .select('*', { count: 'exact', head: true });
+        const totalStudents = data.find(item => item.role === 'student')?.count || 0;
+        const totalTeachers = data.find(item => item.role === 'teacher')?.count || 0;
+        const totalClasses = await supabase.from('classes').select('*', { count: 'exact' });
+        const totalCourses = await supabase.from('courses').select('*', { count: 'exact' });
 
-      // Fetch events count
-      const { count: eventsCount } = await supabase
-        .from('events')
-        .select('*', { count: 'exact', head: true });
-
-      // Fetch notifications count
-      const { count: notificationsCount } = await supabase
-        .from('notifications')
-        .select('*', { count: 'exact', head: true });
-
-      setStats({
-        students: studentsCount || 0,
-        classes: classesCount || 0,
-        events: eventsCount || 0,
-        notifications: notificationsCount || 0
-      });
-    } catch (error) {
-      console.error('Error fetching stats:', error);
-      toast({
-        title: "Error",
-        description: "Failed to load dashboard statistics",
-        variant: "destructive",
-      });
+        return {
+          totalStudents,
+          totalTeachers,
+          totalClasses: totalClasses.count,
+          totalCourses: totalCourses.count,
+        };
+      } catch (error) {
+        console.error('Error fetching stats:', error);
+        toast({
+          title: "Error",
+          description: "Failed to load dashboard statistics",
+          variant: "destructive",
+        });
+      }
     }
-  };
+  });
 
   const statCards = [
-    { title: "Étudiants Total", value: stats.students.toString(), icon: Users, color: "text-primary" },
-    { title: "Classes", value: stats.classes.toString(), icon: BookOpen, color: "text-secondary" },
-    { title: "Événements", value: stats.events.toString(), icon: Calendar, color: "text-green-500" },
-    { title: "Notifications", value: stats.notifications.toString(), icon: Bell, color: "text-purple-500" },
+    { 
+      title: t('admin.dashboard.stats.totalStudents'), 
+      value: stats?.totalStudents || 0, 
+      icon: Users, 
+      color: "text-primary" 
+    },
+    { 
+      title: t('admin.dashboard.stats.totalTeachers'), 
+      value: stats?.totalTeachers || 0, 
+      icon: BookOpen, 
+      color: "text-secondary" 
+    },
+    { 
+      title: t('admin.dashboard.stats.totalClasses'), 
+      value: stats?.totalClasses || 0, 
+      icon: School, 
+      color: "text-green-500" 
+    },
+    { 
+      title: t('admin.dashboard.stats.totalCourses'), 
+      value: stats?.totalCourses || 0, 
+      icon: Bell, 
+      color: "text-purple-500" 
+    }
   ];
 
   return (
-    <DashboardLayout title="Tableau de Bord" role="Administration">
+    <DashboardLayout title={t('admin.dashboard.title')} role="Administration">
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {statCards.map((stat) => (
           <Card key={stat.title} className="p-6">
@@ -85,12 +91,12 @@ const AdminDashboard = () => {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
         <Card className="p-6">
-          <h2 className="text-lg font-semibold mb-4">Activité Récente</h2>
+          <h2 className="text-lg font-semibold mb-4">{t('admin.dashboard.recentActivity')}</h2>
           {/* Activity feed will be implemented in a future update */}
         </Card>
         <Card className="p-6">
-          <h2 className="text-lg font-semibold mb-4">Statistiques</h2>
-          {/* Statistics chart will be implemented in a future update */}
+          <h2 className="text-lg font-semibold mb-4">{t('admin.dashboard.upcomingEvents')}</h2>
+          {/* Upcoming events will be implemented in a future update */}
         </Card>
       </div>
     </DashboardLayout>
