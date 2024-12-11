@@ -267,6 +267,7 @@ export type Database = {
           phone: string | null
           role: string | null
           status: string | null
+          tags: string[] | null
         }
         Insert: {
           created_at?: string
@@ -277,6 +278,7 @@ export type Database = {
           phone?: string | null
           role?: string | null
           status?: string | null
+          tags?: string[] | null
         }
         Update: {
           created_at?: string
@@ -287,6 +289,7 @@ export type Database = {
           phone?: string | null
           role?: string | null
           status?: string | null
+          tags?: string[] | null
         }
         Relationships: []
       }
@@ -361,6 +364,96 @@ export type Database = {
           status?: string | null
         }
         Relationships: []
+      }
+      timetable_entries: {
+        Row: {
+          class_id: string | null
+          course_id: string | null
+          created_at: string
+          day_of_week: string
+          end_time: string
+          id: string
+          room: string | null
+          start_time: string
+          template_id: string | null
+        }
+        Insert: {
+          class_id?: string | null
+          course_id?: string | null
+          created_at?: string
+          day_of_week: string
+          end_time: string
+          id?: string
+          room?: string | null
+          start_time: string
+          template_id?: string | null
+        }
+        Update: {
+          class_id?: string | null
+          course_id?: string | null
+          created_at?: string
+          day_of_week?: string
+          end_time?: string
+          id?: string
+          room?: string | null
+          start_time?: string
+          template_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "timetable_entries_class_id_fkey"
+            columns: ["class_id"]
+            isOneToOne: false
+            referencedRelation: "classes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "timetable_entries_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "timetable_entries_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "timetable_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      timetable_templates: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          description: string | null
+          id: string
+          name: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          name: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "timetable_templates_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
