@@ -53,6 +53,7 @@ export type Database = {
           name: string
           room: string
           teacher_id: string | null
+          type: string | null
         }
         Insert: {
           capacity: number
@@ -62,6 +63,7 @@ export type Database = {
           name: string
           room: string
           teacher_id?: string | null
+          type?: string | null
         }
         Update: {
           capacity?: number
@@ -71,6 +73,7 @@ export type Database = {
           name?: string
           room?: string
           teacher_id?: string | null
+          type?: string | null
         }
         Relationships: [
           {
@@ -257,24 +260,33 @@ export type Database = {
       profiles: {
         Row: {
           created_at: string
+          email: string | null
           first_name: string | null
           id: string
           last_name: string | null
+          phone: string | null
           role: string | null
+          status: string | null
         }
         Insert: {
           created_at?: string
+          email?: string | null
           first_name?: string | null
           id: string
           last_name?: string | null
+          phone?: string | null
           role?: string | null
+          status?: string | null
         }
         Update: {
           created_at?: string
+          email?: string | null
           first_name?: string | null
           id?: string
           last_name?: string | null
+          phone?: string | null
           role?: string | null
+          status?: string | null
         }
         Relationships: []
       }

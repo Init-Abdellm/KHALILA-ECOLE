@@ -8,6 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useProfile } from "@/lib/auth";
 import { toast } from "@/components/ui/use-toast";
 import { useNavigate } from "react-router-dom";
+import { CourseManagementDialog } from "@/components/teacher/CourseManagementDialog";
 
 interface CourseWithClass {
   id: string;
@@ -40,15 +41,7 @@ const Courses = () => {
         `)
         .eq('teacher_id', profile?.id);
 
-      if (error) {
-        console.error('Error fetching courses:', error);
-        toast({
-          title: "Error",
-          description: "Failed to load courses",
-          variant: "destructive",
-        });
-        return [];
-      }
+      if (error) throw error;
       return data as CourseWithClass[];
     },
     enabled: !!profile?.id
@@ -66,6 +59,10 @@ const Courses = () => {
 
   return (
     <DashboardLayout title="Mes Cours" role="Professeur">
+      <div className="mb-6 flex justify-between items-center">
+        <h2 className="text-xl font-semibold">Liste des Cours</h2>
+        <CourseManagementDialog />
+      </div>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {courses?.map((course) => (
           <Card key={course.id} className="p-4 md:p-6">

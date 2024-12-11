@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Eye, Edit, Users, Loader2 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { ClassManagementDialog } from "@/components/director/ClassManagementDialog";
 
 const Classes = () => {
   const { data: classes, isLoading } = useQuery({
@@ -41,7 +42,7 @@ const Classes = () => {
       <Card className="p-6">
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-xl font-semibold">Liste des Classes</h2>
-          <Button>Ajouter une classe</Button>
+          <ClassManagementDialog />
         </div>
         <div className="overflow-x-auto">
           <Table>
@@ -51,6 +52,7 @@ const Classes = () => {
                 <TableHead>Effectif</TableHead>
                 <TableHead>Professeur Principal</TableHead>
                 <TableHead>Salle</TableHead>
+                <TableHead>Type</TableHead>
                 <TableHead>Actions</TableHead>
               </TableRow>
             </TableHeader>
@@ -63,6 +65,7 @@ const Classes = () => {
                     {class_.teacher?.first_name} {class_.teacher?.last_name}
                   </TableCell>
                   <TableCell>{class_.room}</TableCell>
+                  <TableCell>{class_.type}</TableCell>
                   <TableCell>
                     <div className="flex space-x-2">
                       <Button variant="ghost" size="icon">
