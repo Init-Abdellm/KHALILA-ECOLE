@@ -13,6 +13,10 @@ interface CourseWithClass extends Course {
     name: string;
     room: string;
   } | null;
+  teacher: {
+    first_name: string | null;
+    last_name: string | null;
+  } | null;
 }
 
 type GroupedCourses = {
