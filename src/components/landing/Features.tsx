@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
 import { Calendar, Users, BookOpen } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 interface Blog {
   id: string;
@@ -13,6 +14,7 @@ interface Blog {
 
 const Features = () => {
   const [blogs, setBlogs] = useState<Blog[]>([]);
+  const { t } = useTranslation();
 
   const { data: initialBlogs, isLoading } = useQuery({
     queryKey: ["blogs"],
@@ -46,7 +48,6 @@ const Features = () => {
         },
         async (payload) => {
           console.log("Real-time blog update:", payload);
-          // Refresh the blogs data
           const { data, error } = await supabase
             .from("blogs")
             .select("*")
@@ -68,21 +69,18 @@ const Features = () => {
   const features = [
     {
       icon: Calendar,
-      title: "Emploi du temps flexible",
-      description:
-        "Des horaires adaptés aux besoins de chaque élève pour un apprentissage optimal.",
+      title: t('landing.features.schedule.title'),
+      description: t('landing.features.schedule.description'),
     },
     {
       icon: Users,
-      title: "Classes à effectif réduit",
-      description:
-        "Un environnement propice à l'apprentissage avec une attention personnalisée.",
+      title: t('landing.features.classes.title'),
+      description: t('landing.features.classes.description'),
     },
     {
       icon: BookOpen,
-      title: "Programme personnalisé",
-      description:
-        "Un enseignement adapté au niveau et aux objectifs de chaque élève.",
+      title: t('landing.features.program.title'),
+      description: t('landing.features.program.description'),
     },
   ];
 
@@ -91,7 +89,7 @@ const Features = () => {
       <div className="py-12 bg-gray-50">
         <div className="container mx-auto px-4">
           <h2 className="text-3xl font-bold text-center mb-12">
-            Notre Approche Pédagogique
+            {t('landing.features.title')}
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
             {features.map((feature, index) => (
@@ -120,7 +118,7 @@ const Features = () => {
     <div className="py-12 bg-gray-50">
       <div className="container mx-auto px-4">
         <h2 className="text-3xl font-bold text-center mb-12">
-          Notre Approche Pédagogique
+          {t('landing.features.title')}
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
           {features.map((feature, index) => (

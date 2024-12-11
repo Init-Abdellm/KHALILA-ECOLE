@@ -19,18 +19,13 @@ const Login = () => {
   const { t } = useTranslation();
 
   useEffect(() => {
-    console.log("Login - User:", user);
-    console.log("Login - Profile:", profile);
-    
     if (user?.email === 'admin@admin.com') {
-      console.log("Admin user detected, redirecting to admin dashboard");
       const from = location.state?.from?.pathname || '/admin';
       navigate(from, { replace: true });
       return;
     }
 
     if (user && profile) {
-      console.log("User and profile found, redirecting to dashboard");
       const from = location.state?.from?.pathname || getDefaultRoute(profile.role);
       navigate(from, { replace: true });
     }
@@ -51,27 +46,22 @@ const Login = () => {
     }
   };
 
-  // Handle auth state change
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      console.log("Auth state changed:", event, session);
-      
       if (event === 'SIGNED_IN') {
         toast({
-          title: "Connexion réussie",
-          description: "Vous êtes maintenant connecté.",
+          title: t('login.success'),
+          description: t('login.success'),
         });
       } else if (event === 'SIGNED_OUT') {
         toast({
-          title: "Déconnexion",
-          description: "Vous avez été déconnecté.",
+          title: t('common.logout'),
+          description: t('common.logout'),
         });
-      } else if (event === 'USER_UPDATED') {
-        console.log("User updated:", session);
       } else if (event === 'PASSWORD_RECOVERY') {
         toast({
-          title: "Réinitialisation du mot de passe",
-          description: "Veuillez vérifier votre email pour réinitialiser votre mot de passe.",
+          title: t('login.forgotPassword'),
+          description: t('login.forgotPassword'),
         });
       }
     });
@@ -79,7 +69,7 @@ const Login = () => {
     return () => {
       subscription.unsubscribe();
     };
-  }, []);
+  }, [t]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/5 to-secondary/5 flex items-center justify-center p-4">

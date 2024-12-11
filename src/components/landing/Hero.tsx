@@ -19,10 +19,10 @@ const Hero = () => {
           className="text-center"
         >
           <h1 className="text-4xl md:text-6xl font-bold text-white mb-6 leading-tight">
-            {t('hero.title')}
+            {t('landing.title')}
           </h1>
           <p className="text-xl text-neutral-200 max-w-3xl mx-auto mb-8">
-            {t('hero.subtitle')}
+            {t('landing.subtitle')}
           </p>
           <div className="flex flex-col sm:flex-row justify-center gap-4 items-center">
             <Button
@@ -31,7 +31,7 @@ const Hero = () => {
               className="text-lg bg-secondary hover:bg-secondary-dark text-white transition-colors duration-300 w-full sm:w-auto"
             >
               <Link to="/blog">
-                {t('hero.discoverBlog')}
+                {t('landing.discoverBlog')}
                 <ArrowRight className="ml-2" />
               </Link>
             </Button>
@@ -42,7 +42,7 @@ const Hero = () => {
               className="text-lg border-2 border-white text-white hover:bg-white/10 transition-colors duration-300 w-full sm:w-auto"
             >
               <Link to="/login">
-                {t('hero.connectedSpace')}
+                {t('landing.connectedSpace')}
                 <LogIn className="ml-2" />
               </Link>
             </Button>
