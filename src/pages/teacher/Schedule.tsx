@@ -6,6 +6,18 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useProfile } from "@/lib/auth";
 import { Loader2 } from "lucide-react";
+import type { Course } from "@/types/database";
+
+interface CourseWithClass extends Course {
+  classes: {
+    name: string;
+    room: string;
+  } | null;
+}
+
+type GroupedCourses = {
+  [key: string]: CourseWithClass[];
+};
 
 const Schedule = () => {
   const [date, setDate] = useState<Date | undefined>(new Date());
@@ -29,7 +41,7 @@ const Schedule = () => {
       if (error) throw error;
       
       // Group courses by day
-      const groupedCourses = data?.reduce((acc, course) => {
+      const groupedCourses = (data || []).reduce<GroupedCourses>((acc, course) => {
         if (!acc[course.schedule_day]) {
           acc[course.schedule_day] = [];
         }
@@ -37,7 +49,7 @@ const Schedule = () => {
         return acc;
       }, {});
 
-      return groupedCourses || {};
+      return groupedCourses;
     },
     enabled: !!profile?.id
   });

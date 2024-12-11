@@ -7,6 +7,7 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2 } from "lucide-react";
+import type { Event } from "@/types/database";
 
 const DirectorDashboard = () => {
   const [date, setDate] = useState<Date | undefined>(new Date());
@@ -41,7 +42,7 @@ const DirectorDashboard = () => {
         .eq('type', 'report')
         .order('created_at', { ascending: false })
         .limit(3);
-      return data || [];
+      return (data || []) as Event[];
     }
   });
 
@@ -54,7 +55,7 @@ const DirectorDashboard = () => {
         .gte('date', new Date().toISOString())
         .order('date', { ascending: true })
         .limit(3);
-      return data || [];
+      return (data || []) as Event[];
     }
   });
 
@@ -104,7 +105,6 @@ const DirectorDashboard = () => {
                 <TableRow>
                   <TableHead>Titre</TableHead>
                   <TableHead>Date</TableHead>
-                  <TableHead>Statut</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -112,7 +112,6 @@ const DirectorDashboard = () => {
                   <TableRow key={report.id}>
                     <TableCell className="font-medium">{report.title}</TableCell>
                     <TableCell>{new Date(report.date).toLocaleDateString('fr-FR')}</TableCell>
-                    <TableCell>{report.status || 'En cours'}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>
