@@ -2,14 +2,39 @@ import DashboardLayout from "@/components/DashboardLayout";
 import { Card } from "@/components/ui/card";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Eye, Edit, Users } from "lucide-react";
+import { Eye, Edit, Users, Loader2 } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 const Classes = () => {
-  const classes = [
-    { id: 1, name: "6ème A", students: 25, teacher: "Jean Dupont", room: "A101" },
-    { id: 2, name: "5ème B", students: 28, teacher: "Marie Martin", room: "B202" },
-    { id: 3, name: "4ème C", students: 22, teacher: "Lucas Bernard", room: "C303" },
-  ];
+  const { data: classes, isLoading } = useQuery({
+    queryKey: ['classes'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('classes')
+        .select(`
+          *,
+          teacher:profiles!classes_teacher_id_fkey (
+            first_name,
+            last_name
+          ),
+          students_classes (count)
+        `);
+      
+      if (error) throw error;
+      return data || [];
+    }
+  });
+
+  if (isLoading) {
+    return (
+      <DashboardLayout title="Gestion des Classes" role="Direction">
+        <div className="flex justify-center items-center h-96">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      </DashboardLayout>
+    );
+  }
 
   return (
     <DashboardLayout title="Gestion des Classes" role="Direction">
@@ -30,11 +55,13 @@ const Classes = () => {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {classes.map((class_) => (
+              {classes?.map((class_) => (
                 <TableRow key={class_.id}>
                   <TableCell className="font-medium">{class_.name}</TableCell>
-                  <TableCell>{class_.students} élèves</TableCell>
-                  <TableCell>{class_.teacher}</TableCell>
+                  <TableCell>{class_.students_classes?.[0]?.count || 0} élèves</TableCell>
+                  <TableCell>
+                    {class_.teacher?.first_name} {class_.teacher?.last_name}
+                  </TableCell>
                   <TableCell>{class_.room}</TableCell>
                   <TableCell>
                     <div className="flex space-x-2">

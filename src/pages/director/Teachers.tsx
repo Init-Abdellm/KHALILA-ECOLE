@@ -2,35 +2,33 @@ import DashboardLayout from "@/components/DashboardLayout";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Eye, Mail, Phone } from "lucide-react";
+import { Eye, Mail, Phone, Loader2 } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 const Teachers = () => {
-  const teachers = [
-    {
-      id: 1,
-      name: "Sophie Martin",
-      subject: "Mathématiques",
-      email: "sophie.martin@khalilia.edu",
-      phone: "+33 6 12 34 56 78",
-      status: "Actif",
-    },
-    {
-      id: 2,
-      name: "Thomas Bernard",
-      subject: "Français",
-      email: "thomas.bernard@khalilia.edu",
-      phone: "+33 6 23 45 67 89",
-      status: "Actif",
-    },
-    {
-      id: 3,
-      name: "Marie Dubois",
-      subject: "Sciences",
-      email: "marie.dubois@khalilia.edu",
-      phone: "+33 6 34 56 78 90",
-      status: "En congé",
-    },
-  ];
+  const { data: teachers, isLoading } = useQuery({
+    queryKey: ['teachers'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('role', 'teacher');
+      
+      if (error) throw error;
+      return data || [];
+    }
+  });
+
+  if (isLoading) {
+    return (
+      <DashboardLayout title="Enseignants" role="Direction">
+        <div className="flex justify-center items-center h-96">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      </DashboardLayout>
+    );
+  }
 
   return (
     <DashboardLayout title="Enseignants" role="Direction">
@@ -43,21 +41,21 @@ const Teachers = () => {
             <TableHeader>
               <TableRow>
                 <TableHead>Nom</TableHead>
-                <TableHead>Matière</TableHead>
-                <TableHead className="hidden md:table-cell">Email</TableHead>
+                <TableHead>Email</TableHead>
                 <TableHead className="hidden md:table-cell">Téléphone</TableHead>
                 <TableHead>Statut</TableHead>
                 <TableHead>Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {teachers.map((teacher) => (
+              {teachers?.map((teacher) => (
                 <TableRow key={teacher.id}>
-                  <TableCell className="font-medium">{teacher.name}</TableCell>
-                  <TableCell>{teacher.subject}</TableCell>
-                  <TableCell className="hidden md:table-cell">{teacher.email}</TableCell>
-                  <TableCell className="hidden md:table-cell">{teacher.phone}</TableCell>
-                  <TableCell>{teacher.status}</TableCell>
+                  <TableCell className="font-medium">
+                    {teacher.first_name} {teacher.last_name}
+                  </TableCell>
+                  <TableCell>{teacher.email}</TableCell>
+                  <TableCell className="hidden md:table-cell">{teacher.phone || 'Non renseigné'}</TableCell>
+                  <TableCell>{teacher.status || 'Actif'}</TableCell>
                   <TableCell>
                     <div className="flex space-x-2">
                       <Button variant="ghost" size="icon">
