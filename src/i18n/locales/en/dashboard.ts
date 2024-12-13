@@ -26,6 +26,8 @@ export default {
       add: "Add User",
       edit: "Edit User",
       delete: "Delete User",
+      deleteConfirm: "Are you sure you want to delete this user?",
+      resetPassword: "Reset Password",
       columns: {
         name: "Name",
         role: "Role",
@@ -33,19 +35,22 @@ export default {
         phone: "Phone",
         status: "Status",
         actions: "Actions"
+      },
+      form: {
+        firstName: "First Name",
+        lastName: "Last Name",
+        email: "Email",
+        phone: "Phone",
+        role: "Role",
+        password: "Password",
+        confirmPassword: "Confirm Password"
+      },
+      messages: {
+        createSuccess: "User created successfully",
+        updateSuccess: "User updated successfully",
+        deleteSuccess: "User deleted successfully",
+        error: "An error occurred"
       }
-    },
-    stats: {
-      title: "Statistics",
-      monthlySignups: "Monthly Signups",
-      metrics: "Key Metrics"
-    },
-    settings: {
-      title: "Settings",
-      general: "General Settings",
-      school: "School Information",
-      notifications: "Notification Settings",
-      theme: "Theme Settings"
     }
   }
 };

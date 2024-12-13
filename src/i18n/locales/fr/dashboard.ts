@@ -8,15 +8,6 @@ export default {
   },
   recentActivity: 'Activité Récente',
   upcomingEvents: 'Événements à Venir',
-  quickActions: 'Actions Rapides',
-  performance: 'Aperçu des Performances',
-  attendance: 'Présence',
-  courses: {
-    myCourses: 'Mes Cours',
-    schedule: 'Emploi du Temps',
-    grades: 'Notes',
-    assignments: 'Devoirs'
-  },
   admin: {
     dashboard: {
       title: "Tableau de Bord",
@@ -35,6 +26,8 @@ export default {
       add: "Ajouter un Utilisateur",
       edit: "Modifier un Utilisateur",
       delete: "Supprimer un Utilisateur",
+      deleteConfirm: "Êtes-vous sûr de vouloir supprimer cet utilisateur ?",
+      resetPassword: "Réinitialiser le Mot de Passe",
       columns: {
         name: "Nom",
         role: "Rôle",
@@ -42,19 +35,22 @@ export default {
         phone: "Téléphone",
         status: "Statut",
         actions: "Actions"
+      },
+      form: {
+        firstName: "Prénom",
+        lastName: "Nom",
+        email: "Email",
+        phone: "Téléphone",
+        role: "Rôle",
+        password: "Mot de Passe",
+        confirmPassword: "Confirmer le Mot de Passe"
+      },
+      messages: {
+        createSuccess: "Utilisateur créé avec succès",
+        updateSuccess: "Utilisateur mis à jour avec succès",
+        deleteSuccess: "Utilisateur supprimé avec succès",
+        error: "Une erreur est survenue"
       }
-    },
-    stats: {
-      title: "Statistiques",
-      monthlySignups: "Inscriptions Mensuelles",
-      metrics: "Métriques Clés"
-    },
-    settings: {
-      title: "Paramètres",
-      general: "Paramètres Généraux",
-      school: "Informations de l'École",
-      notifications: "Paramètres de Notification",
-      theme: "Paramètres du Thème"
     }
   }
 };

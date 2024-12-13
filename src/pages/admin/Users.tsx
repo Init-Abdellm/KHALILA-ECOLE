@@ -11,7 +11,7 @@ import { useTranslation } from "react-i18next";
 const Users = () => {
   const { t } = useTranslation();
 
-  const { data: users, isLoading } = useQuery({
+  const { data: users, isLoading, refetch } = useQuery({
     queryKey: ['users'],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -39,7 +39,7 @@ const Users = () => {
       <Card className="p-6">
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-xl font-semibold">{t('admin.users.list')}</h2>
-          <UserManagementDialog />
+          <UserManagementDialog onSuccess={refetch} />
         </div>
         <div className="overflow-x-auto">
           <Table>
@@ -61,13 +61,25 @@ const Users = () => {
                   </TableCell>
                   <TableCell>{user.role}</TableCell>
                   <TableCell className="hidden md:table-cell">{user.email}</TableCell>
-                  <TableCell className="hidden md:table-cell">{user.phone || 'Non renseigné'}</TableCell>
+                  <TableCell className="hidden md:table-cell">{user.phone || t('notSpecified')}</TableCell>
                   <TableCell>{user.status}</TableCell>
                   <TableCell>
                     <div className="flex space-x-2">
                       <Button variant="ghost" size="icon">
                         <Eye className="h-4 w-4" />
                       </Button>
+                      <UserManagementDialog
+                        mode="edit"
+                        userData={{
+                          id: user.id,
+                          email: user.email || '',
+                          firstName: user.first_name || '',
+                          lastName: user.last_name || '',
+                          role: user.role || '',
+                          phone: user.phone || '',
+                        }}
+                        onSuccess={refetch}
+                      />
                       <Button variant="ghost" size="icon">
                         <Mail className="h-4 w-4" />
                       </Button>
