@@ -15,31 +15,54 @@ const AdminDashboard = () => {
     queryKey: ['admin-stats'],
     queryFn: async () => {
       try {
-        const { data, error } = await supabase
+        // First, get role counts
+        const { data: roleCounts, error: roleError } = await supabase
           .from('profiles')
-          .select('role, count(*)')
-          .group('role');
+          .select('role, count')
+          .select('role', { count: 'exact' })
+          .eq('role', 'student');
 
-        if (error) throw error;
+        if (roleError) throw roleError;
 
-        const totalStudents = data.find(item => item.role === 'student')?.count || 0;
-        const totalTeachers = data.find(item => item.role === 'teacher')?.count || 0;
-        const totalClasses = await supabase.from('classes').select('*', { count: 'exact' });
-        const totalCourses = await supabase.from('courses').select('*', { count: 'exact' });
+        const { data: teacherCount, error: teacherError } = await supabase
+          .from('profiles')
+          .select('role', { count: 'exact' })
+          .eq('role', 'teacher');
+
+        if (teacherError) throw teacherError;
+
+        // Get class and course counts
+        const { count: totalClasses, error: classError } = await supabase
+          .from('classes')
+          .select('*', { count: 'exact', head: true });
+
+        if (classError) throw classError;
+
+        const { count: totalCourses, error: courseError } = await supabase
+          .from('courses')
+          .select('*', { count: 'exact', head: true });
+
+        if (courseError) throw courseError;
 
         return {
-          totalStudents,
-          totalTeachers,
-          totalClasses: totalClasses.count,
-          totalCourses: totalCourses.count,
+          totalStudents: roleCounts?.length || 0,
+          totalTeachers: teacherCount?.length || 0,
+          totalClasses: totalClasses || 0,
+          totalCourses: totalCourses || 0,
         };
-      } catch (error) {
+      } catch (error: any) {
         console.error('Error fetching stats:', error);
         toast({
-          title: "Error",
-          description: "Failed to load dashboard statistics",
+          title: t('error'),
+          description: t('admin.dashboard.fetchError'),
           variant: "destructive",
         });
+        return {
+          totalStudents: 0,
+          totalTeachers: 0,
+          totalClasses: 0,
+          totalCourses: 0,
+        };
       }
     }
   });

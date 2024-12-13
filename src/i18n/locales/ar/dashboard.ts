@@ -8,6 +8,7 @@ export default {
   },
   recentActivity: 'النشاط الأخير',
   upcomingEvents: 'الأحداث القادمة',
+  fetchError: 'خطأ في جلب البيانات',
   admin: {
     dashboard: {
       title: "لوحة التحكم",
@@ -18,7 +19,8 @@ export default {
         totalCourses: "إجمالي الدورات"
       },
       recentActivity: "النشاط الأخير",
-      upcomingEvents: "الأحداث القادمة"
+      upcomingEvents: "الأحداث القادمة",
+      fetchError: "خطأ في جلب الإحصائيات"
     },
     users: {
       title: "إدارة المستخدمين",
@@ -51,6 +53,85 @@ export default {
         deleteSuccess: "تم حذف المستخدم بنجاح",
         error: "حدث خطأ"
       }
+    }
+  },
+  director: {
+    dashboard: {
+      title: "لوحة التحكم",
+      stats: {
+        totalStudents: "إجمالي الطلاب",
+        totalTeachers: "إجمالي المعلمين",
+        totalClasses: "إجمالي الفصول",
+        totalCourses: "إجمالي الدورات"
+      }
+    },
+    classes: {
+      title: "إدارة الفصول",
+      list: "قائمة الفصول",
+      add: "إضافة فصل",
+      edit: "تعديل فصل",
+      delete: "حذف فصل",
+      columns: {
+        name: "الاسم",
+        level: "المستوى",
+        teacher: "المعلم",
+        capacity: "السعة",
+        room: "الغرفة",
+        type: "النوع",
+        actions: "الإجراءات"
+      }
+    },
+    teachers: {
+      title: "المعلمون",
+      list: "قائمة المعلمين",
+      columns: {
+        name: "الاسم",
+        email: "البريد الإلكتروني",
+        phone: "الهاتف",
+        status: "الحالة",
+        actions: "الإجراءات"
+      }
+    }
+  },
+  teacher: {
+    dashboard: {
+      title: "لوحة التحكم",
+      welcome: "مرحباً",
+      stats: {
+        totalStudents: "طلابي",
+        totalClasses: "فصولي",
+        totalCourses: "دوراتي"
+      }
+    },
+    courses: {
+      title: "دوراتي",
+      list: "قائمة الدورات",
+      add: "إضافة دورة",
+      edit: "تعديل دورة",
+      delete: "حذف دورة"
+    },
+    students: {
+      title: "طلابي",
+      list: "قائمة الطلاب"
+    }
+  },
+  student: {
+    dashboard: {
+      title: "لوحة التحكم",
+      welcome: "مرحباً",
+      stats: {
+        courses: "دوراتي",
+        grades: "درجاتي",
+        events: "الأحداث"
+      }
+    },
+    courses: {
+      title: "دوراتي",
+      list: "قائمة الدورات"
+    },
+    grades: {
+      title: "درجاتي",
+      list: "قائمة الدرجات"
     }
   }
 };
