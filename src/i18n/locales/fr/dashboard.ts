@@ -1,3 +1,5 @@
+// ... keep existing code (previous translations)
+
 export default {
   welcome: 'Bienvenue',
   stats: {
@@ -103,7 +105,19 @@ export default {
       stats: {
         totalStudents: "Mes Élèves",
         totalClasses: "Mes Classes",
-        totalCourses: "Mes Cours"
+        totalCourses: "Mes Cours",
+        attendance: "Présence",
+        performance: "Performance"
+      },
+      schedule: {
+        title: "Mon Emploi du Temps",
+        today: "Aujourd'hui",
+        upcoming: "À venir"
+      },
+      notifications: {
+        title: "Notifications",
+        markAllRead: "Tout marquer comme lu",
+        empty: "Aucune notification"
       }
     },
     courses: {
@@ -111,11 +125,28 @@ export default {
       list: "Liste des Cours",
       add: "Ajouter un Cours",
       edit: "Modifier un Cours",
-      delete: "Supprimer un Cours"
+      delete: "Supprimer un Cours",
+      details: "Détails du Cours",
+      students: "Élèves inscrits",
+      schedule: "Horaire",
+      materials: "Matériel pédagogique"
     },
     students: {
       title: "Mes Élèves",
-      list: "Liste des Élèves"
+      list: "Liste des Élèves",
+      details: "Détails de l'Élève",
+      grades: "Notes",
+      attendance: "Présence",
+      contact: "Coordonnées"
+    },
+    grades: {
+      title: "Notes",
+      add: "Ajouter une Note",
+      edit: "Modifier une Note",
+      delete: "Supprimer une Note",
+      type: "Type d'Évaluation",
+      date: "Date",
+      comment: "Commentaire"
     }
   },
   student: {
@@ -125,16 +156,29 @@ export default {
       stats: {
         courses: "Mes Cours",
         grades: "Mes Notes",
-        events: "Événements"
+        attendance: "Ma Présence",
+        nextClass: "Prochain Cours"
+      },
+      schedule: {
+        title: "Mon Emploi du Temps",
+        today: "Aujourd'hui",
+        upcoming: "À venir"
       }
     },
     courses: {
       title: "Mes Cours",
-      list: "Liste des Cours"
+      list: "Liste des Cours",
+      details: "Détails du Cours",
+      materials: "Matériel de Cours",
+      assignments: "Devoirs",
+      progress: "Progression"
     },
     grades: {
       title: "Mes Notes",
-      list: "Liste des Notes"
+      overview: "Aperçu Général",
+      details: "Détails des Notes",
+      improvement: "Axes d'Amélioration",
+      history: "Historique"
     }
   }
 };

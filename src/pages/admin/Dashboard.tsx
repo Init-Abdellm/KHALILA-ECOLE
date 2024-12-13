@@ -16,37 +16,28 @@ const AdminDashboard = () => {
     queryFn: async () => {
       try {
         // First, get role counts
-        const { data: roleCounts, error: roleError } = await supabase
+        const { count: studentCount } = await supabase
           .from('profiles')
-          .select('role, count')
-          .select('role', { count: 'exact' })
+          .select('*', { count: 'exact', head: true })
           .eq('role', 'student');
 
-        if (roleError) throw roleError;
-
-        const { data: teacherCount, error: teacherError } = await supabase
+        const { count: teacherCount } = await supabase
           .from('profiles')
-          .select('role', { count: 'exact' })
+          .select('*', { count: 'exact', head: true })
           .eq('role', 'teacher');
 
-        if (teacherError) throw teacherError;
-
         // Get class and course counts
-        const { count: totalClasses, error: classError } = await supabase
+        const { count: totalClasses } = await supabase
           .from('classes')
           .select('*', { count: 'exact', head: true });
 
-        if (classError) throw classError;
-
-        const { count: totalCourses, error: courseError } = await supabase
+        const { count: totalCourses } = await supabase
           .from('courses')
           .select('*', { count: 'exact', head: true });
 
-        if (courseError) throw courseError;
-
         return {
-          totalStudents: roleCounts?.length || 0,
-          totalTeachers: teacherCount?.length || 0,
+          totalStudents: studentCount || 0,
+          totalTeachers: teacherCount || 0,
           totalClasses: totalClasses || 0,
           totalCourses: totalCourses || 0,
         };

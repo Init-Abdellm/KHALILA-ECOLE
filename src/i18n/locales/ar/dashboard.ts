@@ -1,3 +1,5 @@
+// ... keep existing code (previous translations)
+
 export default {
   welcome: 'مرحباً',
   stats: {
@@ -100,19 +102,48 @@ export default {
       stats: {
         totalStudents: "طلابي",
         totalClasses: "فصولي",
-        totalCourses: "دوراتي"
+        totalCourses: "دروسي",
+        attendance: "الحضور",
+        performance: "الأداء"
+      },
+      schedule: {
+        title: "جدولي",
+        today: "اليوم",
+        upcoming: "القادم"
+      },
+      notifications: {
+        title: "الإشعارات",
+        markAllRead: "تحديد الكل كمقروء",
+        empty: "لا توجد إشعارات"
       }
     },
     courses: {
-      title: "دوراتي",
-      list: "قائمة الدورات",
-      add: "إضافة دورة",
-      edit: "تعديل دورة",
-      delete: "حذف دورة"
+      title: "دروسي",
+      list: "قائمة الدروس",
+      add: "إضافة درس",
+      edit: "تعديل درس",
+      delete: "حذف درس",
+      details: "تفاصيل الدرس",
+      students: "الطلاب المسجلون",
+      schedule: "الجدول",
+      materials: "المواد التعليمية"
     },
     students: {
       title: "طلابي",
-      list: "قائمة الطلاب"
+      list: "قائمة الطلاب",
+      details: "تفاصيل الطالب",
+      grades: "الدرجات",
+      attendance: "الحضور",
+      contact: "معلومات الاتصال"
+    },
+    grades: {
+      title: "الدرجات",
+      add: "إضافة درجة",
+      edit: "تعديل درجة",
+      delete: "حذف درجة",
+      type: "نوع التقييم",
+      date: "التاريخ",
+      comment: "تعليق"
     }
   },
   student: {
@@ -120,18 +151,31 @@ export default {
       title: "لوحة التحكم",
       welcome: "مرحباً",
       stats: {
-        courses: "دوراتي",
+        courses: "دروسي",
         grades: "درجاتي",
-        events: "الأحداث"
+        attendance: "حضوري",
+        nextClass: "الدرس القادم"
+      },
+      schedule: {
+        title: "جدولي",
+        today: "اليوم",
+        upcoming: "القادم"
       }
     },
     courses: {
-      title: "دوراتي",
-      list: "قائمة الدورات"
+      title: "دروسي",
+      list: "قائمة الدروس",
+      details: "تفاصيل الدرس",
+      materials: "مواد الدرس",
+      assignments: "الواجبات",
+      progress: "التقدم"
     },
     grades: {
       title: "درجاتي",
-      list: "قائمة الدرجات"
+      overview: "نظرة عامة",
+      details: "تفاصيل الدرجات",
+      improvement: "مجالات التحسين",
+      history: "السجل"
     }
   }
 };
