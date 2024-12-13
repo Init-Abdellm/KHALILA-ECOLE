@@ -1,34 +1,56 @@
 import DashboardLayout from "@/components/DashboardLayout";
 import { Card } from "@/components/ui/card";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { useProfile } from "@/lib/auth";
+import { Loader2 } from "lucide-react";
+import { toast } from "@/components/ui/use-toast";
 
 const Grades = () => {
-  const grades = [
-    {
-      id: 1,
-      subject: "Mathématiques",
-      type: "Contrôle",
-      date: "2024-02-15",
-      grade: "16/20",
-      average: "15.5/20",
+  const { profile } = useProfile();
+
+  const { data: grades, isLoading } = useQuery({
+    queryKey: ['student-grades', profile?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('grades')
+        .select(`
+          *,
+          course:courses (
+            name,
+            class:classes (
+              name
+            )
+          )
+        `)
+        .eq('student_id', profile?.id)
+        .order('date', { ascending: false });
+
+      if (error) {
+        console.error('Error fetching grades:', error);
+        toast({
+          title: "Error",
+          description: "Failed to load grades",
+          variant: "destructive",
+        });
+        throw error;
+      }
+
+      return data;
     },
-    {
-      id: 2,
-      subject: "Français",
-      type: "Devoir",
-      date: "2024-02-14",
-      grade: "14/20",
-      average: "14.8/20",
-    },
-    {
-      id: 3,
-      subject: "Sciences",
-      type: "Examen",
-      date: "2024-02-13",
-      grade: "18/20",
-      average: "16.2/20",
-    },
-  ];
+    enabled: !!profile?.id,
+  });
+
+  if (isLoading) {
+    return (
+      <DashboardLayout title="Mes Notes" role="Étudiant">
+        <div className="flex justify-center items-center h-96">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      </DashboardLayout>
+    );
+  }
 
   return (
     <DashboardLayout title="Mes Notes" role="Étudiant">
@@ -49,13 +71,13 @@ const Grades = () => {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {grades.map((grade) => (
+              {grades?.map((grade) => (
                 <TableRow key={grade.id}>
-                  <TableCell className="font-medium">{grade.subject}</TableCell>
+                  <TableCell className="font-medium">{grade.course.name}</TableCell>
                   <TableCell>{grade.type}</TableCell>
                   <TableCell>{new Date(grade.date).toLocaleDateString('fr-FR')}</TableCell>
-                  <TableCell>{grade.grade}</TableCell>
-                  <TableCell>{grade.average}</TableCell>
+                  <TableCell>{grade.grade}/20</TableCell>
+                  <TableCell>{grade.course.class.name}</TableCell>
                 </TableRow>
               ))}
             </TableBody>

@@ -2,35 +2,65 @@ import DashboardLayout from "@/components/DashboardLayout";
 import { Card } from "@/components/ui/card";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Eye, Mail, Phone } from "lucide-react";
+import { Eye, Mail, Phone, Loader2 } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { useProfile } from "@/lib/auth";
+import { toast } from "@/components/ui/use-toast";
 
 const Students = () => {
-  const students = [
-    {
-      id: 1,
-      name: "Jean Dupont",
-      class: "6ème A",
-      email: "jean.dupont@example.com",
-      phone: "+33 6 12 34 56 78",
-      average: "15.5",
+  const { profile } = useProfile();
+
+  const { data: students, isLoading } = useQuery({
+    queryKey: ['teacher-students', profile?.id],
+    queryFn: async () => {
+      const { data: classesData, error: classesError } = await supabase
+        .from('classes')
+        .select('id')
+        .eq('teacher_id', profile?.id);
+
+      if (classesError) {
+        console.error('Error fetching classes:', classesError);
+        throw classesError;
+      }
+
+      const classIds = classesData.map(c => c.id);
+
+      const { data: studentsData, error: studentsError } = await supabase
+        .from('students_classes')
+        .select(`
+          student:profiles (
+            id,
+            first_name,
+            last_name,
+            email,
+            phone
+          ),
+          class:classes (
+            name
+          )
+        `)
+        .in('class_id', classIds);
+
+      if (studentsError) {
+        console.error('Error fetching students:', studentsError);
+        throw studentsError;
+      }
+
+      return studentsData;
     },
-    {
-      id: 2,
-      name: "Marie Martin",
-      class: "6ème A",
-      email: "marie.martin@example.com",
-      phone: "+33 6 23 45 67 89",
-      average: "14.8",
-    },
-    {
-      id: 3,
-      name: "Lucas Bernard",
-      class: "6ème A",
-      email: "lucas.bernard@example.com",
-      phone: "+33 6 34 56 78 90",
-      average: "16.2",
-    },
-  ];
+    enabled: !!profile?.id,
+  });
+
+  if (isLoading) {
+    return (
+      <DashboardLayout title="Mes Élèves" role="Professeur">
+        <div className="flex justify-center items-center h-96">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      </DashboardLayout>
+    );
+  }
 
   return (
     <DashboardLayout title="Mes Élèves" role="Professeur">
@@ -44,18 +74,18 @@ const Students = () => {
                   <TableHead>Classe</TableHead>
                   <TableHead className="hidden md:table-cell">Email</TableHead>
                   <TableHead className="hidden md:table-cell">Téléphone</TableHead>
-                  <TableHead>Moyenne</TableHead>
                   <TableHead>Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {students.map((student) => (
-                  <TableRow key={student.id}>
-                    <TableCell className="font-medium">{student.name}</TableCell>
-                    <TableCell>{student.class}</TableCell>
-                    <TableCell className="hidden md:table-cell">{student.email}</TableCell>
-                    <TableCell className="hidden md:table-cell">{student.phone}</TableCell>
-                    <TableCell>{student.average}</TableCell>
+                {students?.map((entry) => (
+                  <TableRow key={entry.student.id}>
+                    <TableCell className="font-medium">
+                      {entry.student.first_name} {entry.student.last_name}
+                    </TableCell>
+                    <TableCell>{entry.class.name}</TableCell>
+                    <TableCell className="hidden md:table-cell">{entry.student.email}</TableCell>
+                    <TableCell className="hidden md:table-cell">{entry.student.phone}</TableCell>
                     <TableCell>
                       <div className="flex space-x-2">
                         <Button variant="ghost" size="icon">
