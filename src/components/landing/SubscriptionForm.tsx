@@ -14,6 +14,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { motion } from "framer-motion";
 
 const formSchema = z.object({
   parentName: z.string().min(2, "Le nom doit contenir au moins 2 caractères"),
@@ -56,8 +57,8 @@ const SubscriptionForm = () => {
       if (error) throw error;
 
       toast({
-        title: "Formulaire envoyé",
-        description: "Nous vous contacterons bientôt.",
+        title: "Formulaire envoyé avec succès",
+        description: "Nous vous contacterons bientôt pour plus d'informations.",
       });
       form.reset();
     } catch (error) {
@@ -70,110 +71,138 @@ const SubscriptionForm = () => {
   };
 
   return (
-    <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <FormField
-            control={form.control}
-            name="parentName"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Nom du parent</FormLabel>
-                <FormControl>
-                  <Input placeholder="Votre nom complet" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="parentEmail"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Email</FormLabel>
-                <FormControl>
-                  <Input placeholder="votre@email.com" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="parentPhone"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Téléphone</FormLabel>
-                <FormControl>
-                  <Input placeholder="Votre numéro de téléphone" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="childName"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Nom de l'enfant</FormLabel>
-                <FormControl>
-                  <Input placeholder="Nom complet de l'enfant" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="childAge"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Âge de l'enfant</FormLabel>
-                <FormControl>
-                  <Input placeholder="Âge" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="currentSchool"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>École actuelle (optionnel)</FormLabel>
-                <FormControl>
-                  <Input placeholder="École actuelle" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+    <div className="py-24 bg-white">
+      <div className="container mx-auto px-4">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          viewport={{ once: true }}
+          className="text-center mb-16"
+        >
+          <h2 className="text-4xl font-bold text-primary mb-4">Demande d'inscription</h2>
+          <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+            Commencez le parcours d'excellence de votre enfant dès aujourd'hui.
+          </p>
+        </motion.div>
+
+        <div className="max-w-3xl mx-auto">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.2 }}
+            viewport={{ once: true }}
+          >
+            <Card className="p-8">
+              <Form {...form}>
+                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <FormField
+                      control={form.control}
+                      name="parentName"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Nom du parent</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Votre nom complet" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="parentEmail"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Email</FormLabel>
+                          <FormControl>
+                            <Input placeholder="votre@email.com" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="parentPhone"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Téléphone</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Votre numéro de téléphone" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="childName"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Nom de l'enfant</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Nom complet de l'enfant" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="childAge"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Âge de l'enfant</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Âge" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="currentSchool"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>École actuelle (optionnel)</FormLabel>
+                          <FormControl>
+                            <Input placeholder="École actuelle" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                  <FormField
+                    control={form.control}
+                    name="message"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Message (optionnel)</FormLabel>
+                        <FormControl>
+                          <Textarea
+                            placeholder="Informations supplémentaires..."
+                            className="resize-none"
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <Button type="submit" className="w-full">
+                    Envoyer la demande d'inscription
+                  </Button>
+                </form>
+              </Form>
+            </Card>
+          </motion.div>
         </div>
-        <FormField
-          control={form.control}
-          name="message"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Message (optionnel)</FormLabel>
-              <FormControl>
-                <Textarea
-                  placeholder="Informations supplémentaires..."
-                  className="resize-none"
-                  {...field}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <Button type="submit" className="w-full">
-          Envoyer la demande d'inscription
-        </Button>
-      </form>
-    </Form>
+      </div>
+    </div>
   );
 };
 
