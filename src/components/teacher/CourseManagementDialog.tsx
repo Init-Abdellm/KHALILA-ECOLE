@@ -43,7 +43,8 @@ export function CourseManagementDialog() {
     setLoading(true);
 
     try {
-      const { error } = await supabase
+      // Create course
+      const { data: course, error: courseError } = await supabase
         .from('courses')
         .insert({
           name: formData.name,
@@ -52,9 +53,33 @@ export function CourseManagementDialog() {
           teacher_id: profile?.id,
           schedule_day: formData.scheduleDay,
           schedule_time: formData.scheduleTime,
-        });
+        })
+        .select()
+        .single();
 
-      if (error) throw error;
+      if (courseError) throw courseError;
+
+      // Get affected students
+      const { data: students } = await supabase
+        .from('students_classes')
+        .select('student_id')
+        .eq('class_id', formData.classId);
+
+      // Create notifications for affected students
+      if (students && students.length > 0) {
+        const notifications = students.map(({ student_id }) => ({
+          user_id: student_id,
+          title: "New Course Added",
+          message: `A new course "${formData.name}" has been added to your schedule on ${formData.scheduleDay}s at ${formData.scheduleTime}`,
+          type: "info"
+        }));
+
+        const { error: notificationError } = await supabase
+          .from('notifications')
+          .insert(notifications);
+
+        if (notificationError) throw notificationError;
+      }
 
       toast({
         title: "Success",
