@@ -1,12 +1,9 @@
 import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { UserPlus, Pencil, Trash2, Key } from "lucide-react";
+import { UserPlus, Pencil, Trash2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import {
   AlertDialog,
@@ -18,6 +15,8 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { UserForm } from "./UserForm";
+import { ExcelImport } from "./ExcelImport";
 
 interface UserFormData {
   id?: string;
@@ -27,7 +26,7 @@ interface UserFormData {
   role: string;
   phone: string;
   password?: string;
-  confirmPassword?: string;
+  tags?: string[];
 }
 
 interface UserManagementDialogProps {
@@ -35,6 +34,8 @@ interface UserManagementDialogProps {
   userData?: UserFormData;
   onSuccess?: () => void;
 }
+
+const DEFAULT_PASSWORD = "ChangeMe123!";
 
 export function UserManagementDialog({ mode = 'create', userData, onSuccess }: UserManagementDialogProps) {
   const [isOpen, setIsOpen] = useState(false);
@@ -49,6 +50,7 @@ export function UserManagementDialog({ mode = 'create', userData, onSuccess }: U
       lastName: "",
       role: "",
       phone: "",
+      tags: [],
     }
   );
 
@@ -60,7 +62,7 @@ export function UserManagementDialog({ mode = 'create', userData, onSuccess }: U
       if (mode === 'create') {
         const { data: authData, error: authError } = await supabase.auth.signUp({
           email: formData.email,
-          password: formData.password || "tempPassword123!",
+          password: formData.password || DEFAULT_PASSWORD,
           options: {
             data: {
               first_name: formData.firstName,
@@ -71,6 +73,17 @@ export function UserManagementDialog({ mode = 'create', userData, onSuccess }: U
         });
 
         if (authError) throw authError;
+
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .update({
+            phone: formData.phone,
+            tags: formData.tags,
+            first_login: true,
+          })
+          .eq('id', authData.user?.id);
+
+        if (profileError) throw profileError;
 
         toast({
           title: t('admin.users.messages.createSuccess'),
@@ -83,6 +96,7 @@ export function UserManagementDialog({ mode = 'create', userData, onSuccess }: U
             last_name: formData.lastName,
             role: formData.role,
             phone: formData.phone,
+            tags: formData.tags,
           })
           .eq('id', formData.id);
 
@@ -111,6 +125,7 @@ export function UserManagementDialog({ mode = 'create', userData, onSuccess }: U
         lastName: "",
         role: "",
         phone: "",
+        tags: [],
       });
     } catch (error: any) {
       toast({
@@ -148,15 +163,69 @@ export function UserManagementDialog({ mode = 'create', userData, onSuccess }: U
     }
   };
 
+  const handleBulkImport = async (users: UserFormData[]) => {
+    setLoading(true);
+    let successCount = 0;
+    let errorCount = 0;
+
+    for (const user of users) {
+      try {
+        const { data: authData, error: authError } = await supabase.auth.signUp({
+          email: user.email,
+          password: DEFAULT_PASSWORD,
+          options: {
+            data: {
+              first_name: user.firstName,
+              last_name: user.lastName,
+              role: user.role,
+            },
+          },
+        });
+
+        if (authError) throw authError;
+
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .update({
+            phone: user.phone,
+            tags: user.tags,
+            first_login: true,
+          })
+          .eq('id', authData.user?.id);
+
+        if (profileError) throw profileError;
+
+        successCount++;
+      } catch (error) {
+        console.error('Error importing user:', user.email, error);
+        errorCount++;
+      }
+    }
+
+    toast({
+      title: t('admin.users.messages.bulkImportComplete'),
+      description: t('admin.users.messages.bulkImportSummary', {
+        success: successCount,
+        error: errorCount,
+      }),
+    });
+
+    setLoading(false);
+    onSuccess?.();
+  };
+
   return (
     <>
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
         <DialogTrigger asChild>
           {mode === 'create' ? (
-            <Button>
-              <UserPlus className="mr-2 h-4 w-4" />
-              {t('admin.users.add')}
-            </Button>
+            <div className="flex gap-2">
+              <Button>
+                <UserPlus className="mr-2 h-4 w-4" />
+                {t('admin.users.add')}
+              </Button>
+              <ExcelImport onUsersImported={handleBulkImport} />
+            </div>
           ) : (
             <Button variant="ghost" size="icon">
               <Pencil className="h-4 w-4" />
@@ -169,75 +238,12 @@ export function UserManagementDialog({ mode = 'create', userData, onSuccess }: U
               {mode === 'create' ? t('admin.users.add') : t('admin.users.edit')}
             </DialogTitle>
           </DialogHeader>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="grid gap-4 py-4">
-              {mode === 'create' && (
-                <div>
-                  <Label htmlFor="email">{t('admin.users.form.email')}</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    value={formData.email}
-                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                    required={mode === 'create'}
-                  />
-                </div>
-              )}
-              <div>
-                <Label htmlFor="firstName">{t('admin.users.form.firstName')}</Label>
-                <Input
-                  id="firstName"
-                  value={formData.firstName}
-                  onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
-                  required
-                />
-              </div>
-              <div>
-                <Label htmlFor="lastName">{t('admin.users.form.lastName')}</Label>
-                <Input
-                  id="lastName"
-                  value={formData.lastName}
-                  onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
-                  required
-                />
-              </div>
-              <div>
-                <Label htmlFor="role">{t('admin.users.form.role')}</Label>
-                <Select
-                  value={formData.role}
-                  onValueChange={(value) => setFormData({ ...formData, role: value })}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder={t('admin.users.form.role')} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="teacher">Teacher</SelectItem>
-                    <SelectItem value="student">Student</SelectItem>
-                    <SelectItem value="director">Director</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <Label htmlFor="phone">{t('admin.users.form.phone')}</Label>
-                <Input
-                  id="phone"
-                  type="tel"
-                  value={formData.phone}
-                  onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                />
-              </div>
-              {mode === 'edit' && (
-                <div>
-                  <Label htmlFor="password">{t('admin.users.form.password')}</Label>
-                  <Input
-                    id="password"
-                    type="password"
-                    value={formData.password}
-                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                  />
-                </div>
-              )}
-            </div>
+          <form onSubmit={handleSubmit}>
+            <UserForm
+              data={formData}
+              onChange={setFormData}
+              mode={mode}
+            />
             <DialogFooter className="sm:justify-between">
               {mode === 'edit' && (
                 <Button
