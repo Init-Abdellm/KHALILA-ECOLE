@@ -39,7 +39,6 @@ const DirectorDashboard = () => {
       const { data } = await supabase
         .from('events')
         .select('*')
-        .eq('type', 'report')
         .order('created_at', { ascending: false })
         .limit(3);
       return (data || []) as Event[];

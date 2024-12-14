@@ -13,7 +13,7 @@ const Users = () => {
   const { t } = useTranslation();
   const { toast } = useToast();
 
-  const { data: users = [], isLoading, error } = useQuery({
+  const { data: users = [], isLoading, error, refetch } = useQuery({
     queryKey: ['users'],
     queryFn: async () => {
       try {
