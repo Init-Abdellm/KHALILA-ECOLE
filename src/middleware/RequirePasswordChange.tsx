@@ -17,6 +17,10 @@ interface RequirePasswordChangeProps {
   children: React.ReactNode;
 }
 
+interface Profile {
+  first_login: boolean;
+}
+
 export function RequirePasswordChange({ children }: RequirePasswordChangeProps) {
   const [loading, setLoading] = useState(true);
   const [needsPasswordChange, setNeedsPasswordChange] = useState(false);
@@ -62,10 +66,12 @@ export function RequirePasswordChange({ children }: RequirePasswordChangeProps) 
       const { error } = await supabase.auth.updateUser({ password });
       if (error) throw error;
 
-      await supabase
+      const { error: updateError } = await supabase
         .from('profiles')
         .update({ first_login: false })
         .eq('id', (await supabase.auth.getUser()).data.user?.id);
+
+      if (updateError) throw updateError;
 
       setNeedsPasswordChange(false);
       toast({

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -12,16 +12,20 @@ interface TagsInputProps {
   label?: string;
 }
 
+interface SuggestedTag {
+  tag: string;
+}
+
 export function TagsInput({ value = [], onChange, label }: TagsInputProps) {
   const [input, setInput] = useState("");
   
-  const { data: suggestedTags } = useQuery({
+  const { data: suggestedTags } = useQuery<SuggestedTag[]>({
     queryKey: ['suggested-tags'],
     queryFn: async () => {
       const { data, error } = await supabase
         .rpc('get_suggested_tags');
       if (error) throw error;
-      return data?.map(t => t.tag) || [];
+      return data || [];
     }
   });
 
@@ -74,15 +78,15 @@ export function TagsInput({ value = [], onChange, label }: TagsInputProps) {
           <p className="text-sm text-muted-foreground mb-1">Suggested tags:</p>
           <div className="flex flex-wrap gap-1">
             {suggestedTags
-              .filter(tag => !value.includes(tag))
+              .filter(tag => !value.includes(tag.tag))
               .map(tag => (
                 <Badge
-                  key={tag}
+                  key={tag.tag}
                   variant="outline"
                   className="cursor-pointer hover:bg-accent"
-                  onClick={() => addSuggestedTag(tag)}
+                  onClick={() => addSuggestedTag(tag.tag)}
                 >
-                  {tag}
+                  {tag.tag}
                 </Badge>
               ))}
           </div>

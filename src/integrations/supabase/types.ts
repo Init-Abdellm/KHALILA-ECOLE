@@ -261,6 +261,7 @@ export type Database = {
         Row: {
           created_at: string
           email: string | null
+          first_login: boolean | null
           first_name: string | null
           id: string
           last_name: string | null
@@ -272,6 +273,7 @@ export type Database = {
         Insert: {
           created_at?: string
           email?: string | null
+          first_login?: boolean | null
           first_name?: string | null
           id: string
           last_name?: string | null
@@ -283,6 +285,7 @@ export type Database = {
         Update: {
           created_at?: string
           email?: string | null
+          first_login?: boolean | null
           first_name?: string | null
           id?: string
           last_name?: string | null
@@ -460,7 +463,12 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      get_suggested_tags: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          tag: string
+        }[]
+      }
     }
     Enums: {
       [_ in never]: never
