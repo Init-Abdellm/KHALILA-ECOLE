@@ -18,6 +18,7 @@ import DirectorTeachers from "@/pages/director/Teachers";
 import DirectorClasses from "@/pages/director/Classes";
 import DirectorReports from "@/pages/director/Reports";
 import DirectorNotifications from "@/pages/director/Notifications";
+import DirectorGradesOverview from "@/pages/director/GradesOverview";
 
 // Teacher routes
 import TeacherDashboard from "@/pages/teacher/Dashboard";
@@ -68,6 +69,7 @@ function App() {
       <Route path="/director/classes" element={<DirectorClasses />} />
       <Route path="/director/reports" element={<DirectorReports />} />
       <Route path="/director/notifications" element={<DirectorNotifications />} />
+      <Route path="/director/grades" element={<DirectorGradesOverview />} />
 
       {/* Teacher routes */}
       <Route path="/teacher" element={<TeacherDashboard />} />

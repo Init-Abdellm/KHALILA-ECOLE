@@ -3,20 +3,18 @@ import DashboardLayout from "@/components/DashboardLayout";
 import { Card } from "@/components/ui/card";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Eye, Download, Filter, Loader2 } from "lucide-react";
+import { Download, Filter, Loader2 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { useProfile } from "@/lib/auth";
 import { toast } from "@/components/ui/use-toast";
 import * as XLSX from 'xlsx';
 
-const Grades = () => {
-  const { profile } = useProfile();
-  const [selectedCourse, setSelectedCourse] = useState<string | null>(null);
+const GradesOverview = () => {
+  const [selectedClass, setSelectedClass] = useState<string | null>(null);
   const [selectedType, setSelectedType] = useState<string | null>(null);
 
   const { data: grades, isLoading } = useQuery({
-    queryKey: ['teacher-grades', profile?.id, selectedCourse, selectedType],
+    queryKey: ['all-grades', selectedClass, selectedType],
     queryFn: async () => {
       const query = supabase
         .from('grades')
@@ -24,6 +22,10 @@ const Grades = () => {
           *,
           course:courses (
             name,
+            teacher:profiles!courses_teacher_id_fkey (
+              first_name,
+              last_name
+            ),
             class:classes (
               name,
               level
@@ -36,8 +38,8 @@ const Grades = () => {
         `)
         .order('created_at', { ascending: false });
 
-      if (selectedCourse) {
-        query.eq('course_id', selectedCourse);
+      if (selectedClass) {
+        query.eq('course.class_id', selectedClass);
       }
       if (selectedType) {
         query.eq('type', selectedType);
@@ -55,30 +57,28 @@ const Grades = () => {
         return [];
       }
       return data;
-    },
-    enabled: !!profile?.id
+    }
   });
 
-  const { data: courses } = useQuery({
-    queryKey: ['teacher-courses', profile?.id],
+  const { data: classes } = useQuery({
+    queryKey: ['all-classes'],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('courses')
-        .select('*, classes (name, level)')
-        .eq('teacher_id', profile?.id);
+        .from('classes')
+        .select('*')
+        .order('name');
 
       if (error) {
-        console.error('Error fetching courses:', error);
+        console.error('Error fetching classes:', error);
         toast({
           title: "Error",
-          description: "Failed to load courses",
+          description: "Failed to load classes",
           variant: "destructive",
         });
         return [];
       }
       return data;
-    },
-    enabled: !!profile?.id
+    }
   });
 
   const gradeTypes = ['Quiz', 'Exam', 'Homework', 'Project'];
@@ -90,6 +90,7 @@ const Grades = () => {
     const worksheet = XLSX.utils.json_to_sheet(grades.map(grade => ({
       'Student Name': `${grade.student?.first_name} ${grade.student?.last_name}`,
       'Course': grade.course?.name,
+      'Teacher': `${grade.course?.teacher?.first_name} ${grade.course?.teacher?.last_name}`,
       'Class': grade.course?.class?.name,
       'Level': grade.course?.class?.level,
       'Type': grade.type,
@@ -97,13 +98,13 @@ const Grades = () => {
       'Date': new Date(grade.date).toLocaleDateString('fr-FR')
     })));
 
-    XLSX.utils.book_append_sheet(workbook, worksheet, 'Grades');
-    XLSX.writeFile(workbook, 'grades_report.xlsx');
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Grades Overview');
+    XLSX.writeFile(workbook, 'grades_overview_report.xlsx');
   };
 
   if (isLoading) {
     return (
-      <DashboardLayout title="Notes" role="Professeur">
+      <DashboardLayout title="Vue d'ensemble des notes" role="Direction">
         <div className="flex justify-center items-center h-96">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
         </div>
@@ -112,24 +113,24 @@ const Grades = () => {
   }
 
   return (
-    <DashboardLayout title="Notes" role="Professeur">
+    <DashboardLayout title="Vue d'ensemble des notes" role="Direction">
       <Card className="w-full">
         <div className="p-4 md:p-6">
           <div className="flex flex-col md:flex-row gap-4 mb-6">
             <div className="flex gap-2 overflow-x-auto">
               <Button
-                variant={!selectedCourse ? "default" : "outline"}
-                onClick={() => setSelectedCourse(null)}
+                variant={!selectedClass ? "default" : "outline"}
+                onClick={() => setSelectedClass(null)}
               >
-                Tous les cours
+                Toutes les classes
               </Button>
-              {courses?.map((course) => (
+              {classes?.map((class_) => (
                 <Button
-                  key={course.id}
-                  variant={selectedCourse === course.id ? "default" : "outline"}
-                  onClick={() => setSelectedCourse(course.id)}
+                  key={class_.id}
+                  variant={selectedClass === class_.id ? "default" : "outline"}
+                  onClick={() => setSelectedClass(class_.id)}
                 >
-                  {course.name} - {course.classes?.name}
+                  {class_.name}
                 </Button>
               ))}
             </div>
@@ -163,11 +164,11 @@ const Grades = () => {
                 <TableRow>
                   <TableHead>Élève</TableHead>
                   <TableHead>Cours</TableHead>
+                  <TableHead>Professeur</TableHead>
                   <TableHead>Classe</TableHead>
                   <TableHead>Type</TableHead>
-                  <TableHead className="hidden md:table-cell">Date</TableHead>
                   <TableHead>Note</TableHead>
-                  <TableHead>Actions</TableHead>
+                  <TableHead className="hidden md:table-cell">Date</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -177,21 +178,14 @@ const Grades = () => {
                       {grade.student?.first_name} {grade.student?.last_name}
                     </TableCell>
                     <TableCell>{grade.course?.name}</TableCell>
+                    <TableCell>
+                      {grade.course?.teacher?.first_name} {grade.course?.teacher?.last_name}
+                    </TableCell>
                     <TableCell>{grade.course?.class?.name}</TableCell>
                     <TableCell>{grade.type}</TableCell>
+                    <TableCell>{grade.grade}/20</TableCell>
                     <TableCell className="hidden md:table-cell">
                       {new Date(grade.date).toLocaleDateString('fr-FR')}
-                    </TableCell>
-                    <TableCell>{grade.grade}/20</TableCell>
-                    <TableCell>
-                      <div className="flex space-x-2">
-                        <Button variant="ghost" size="icon">
-                          <Eye className="h-4 w-4" />
-                        </Button>
-                        <Button variant="ghost" size="icon">
-                          <Download className="h-4 w-4" />
-                        </Button>
-                      </div>
                     </TableCell>
                   </TableRow>
                 ))}
@@ -204,4 +198,4 @@ const Grades = () => {
   );
 };
 
-export default Grades;
+export default GradesOverview;
