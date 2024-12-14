@@ -7,20 +7,34 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { UserManagementDialog } from "@/components/admin/UserManagementDialog";
 import { useTranslation } from "react-i18next";
+import { useToast } from "@/hooks/use-toast";
 
 const Users = () => {
   const { t } = useTranslation();
+  const { toast } = useToast();
 
-  const { data: users, isLoading, refetch } = useQuery({
+  const { data: users = [], isLoading, error } = useQuery({
     queryKey: ['users'],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .order('created_at', { ascending: false });
-      
-      if (error) throw error;
-      return data || [];
+      try {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('*')
+          .order('created_at', { ascending: false });
+        
+        if (error) {
+          toast({
+            title: "Error",
+            description: "Failed to fetch users",
+            variant: "destructive",
+          });
+          throw error;
+        }
+        return data || [];
+      } catch (err) {
+        console.error('Error fetching users:', err);
+        throw err;
+      }
     }
   });
 
@@ -34,12 +48,24 @@ const Users = () => {
     );
   }
 
+  if (error) {
+    return (
+      <DashboardLayout title={t('admin.users.title')} role="Administration">
+        <Card className="p-6">
+          <div className="text-center text-red-600">
+            {t('admin.users.error')}
+          </div>
+        </Card>
+      </DashboardLayout>
+    );
+  }
+
   return (
     <DashboardLayout title={t('admin.users.title')} role="Administration">
       <Card className="p-6">
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-xl font-semibold">{t('admin.users.list')}</h2>
-          <UserManagementDialog onSuccess={refetch} />
+          <UserManagementDialog onSuccess={() => refetch()} />
         </div>
         <div className="overflow-x-auto">
           <Table>
@@ -78,7 +104,7 @@ const Users = () => {
                           role: user.role || '',
                           phone: user.phone || '',
                         }}
-                        onSuccess={refetch}
+                        onSuccess={() => refetch()}
                       />
                       <Button variant="ghost" size="icon">
                         <Mail className="h-4 w-4" />
