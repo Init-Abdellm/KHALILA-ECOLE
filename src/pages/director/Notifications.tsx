@@ -1,16 +1,11 @@
 import { useEffect, useState } from "react";
 import DashboardLayout from "@/components/DashboardLayout";
 import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
+import { db } from "@/lib/database";
 import { useProfile } from "@/lib/auth";
-
-interface Notification {
-  id: string;
-  title: string;
-  message: string;
-  created_at: string;
-  read: boolean;
-}
+import { Loader2 } from "lucide-react";
+import { databases } from "@/integrations/appwrite/client";
+import { Notification } from "@/types/database";
 
 export default function DirectorNotifications() {
   const [notifications, setNotifications] = useState<Notification[]>([]);
@@ -26,11 +21,7 @@ export default function DirectorNotifications() {
     try {
       if (!profile?.id) return;
 
-      const { data, error } = await supabase
-        .from("notifications")
-        .select("*")
-        .eq("user_id", profile.id)
-        .order("created_at", { ascending: false });
+      const { data, error } = await db.getNotifications(profile.id);
 
       if (error) throw error;
 
@@ -49,18 +40,23 @@ export default function DirectorNotifications() {
 
   const markAsRead = async (notificationId: string) => {
     try {
-      const { error } = await supabase
-        .from("notifications")
-        .update({ read: true })
-        .eq("id", notificationId);
-
-      if (error) throw error;
+      await databases.updateDocument(
+        import.meta.env.VITE_APPWRITE_DATABASE_ID,
+        'notifications',
+        notificationId,
+        { read: true }
+      );
 
       setNotifications((prev) =>
         prev.map((n) =>
-          n.id === notificationId ? { ...n, read: true } : n
+          n.$id === notificationId ? { ...n, read: true } : n
         )
       );
+
+      toast({
+        title: "Success",
+        description: "Notification marked as read",
+      });
     } catch (error: any) {
       console.error("Error marking notification as read:", error);
       toast({
@@ -72,19 +68,21 @@ export default function DirectorNotifications() {
   };
 
   return (
-    <DashboardLayout title="Notifications" role="director">
+    <DashboardLayout title="Notifications" role="Direction">
       <div className="container mx-auto px-4 py-8">
         <h1 className="text-2xl font-bold mb-6">Notifications</h1>
         
         {loading ? (
-          <div className="text-center">Loading notifications...</div>
+          <div className="flex justify-center items-center h-32">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          </div>
         ) : notifications.length === 0 ? (
-          <div className="text-center text-gray-500">No notifications</div>
+          <div className="text-center text-gray-500">Aucune notification</div>
         ) : (
           <div className="space-y-4">
             {notifications.map((notification) => (
               <div
-                key={notification.id}
+                key={notification.$id}
                 className={`p-4 rounded-lg border ${
                   notification.read ? "bg-gray-50" : "bg-white"
                 }`}
@@ -94,15 +92,15 @@ export default function DirectorNotifications() {
                     <h3 className="font-semibold">{notification.title}</h3>
                     <p className="text-gray-600 mt-1">{notification.message}</p>
                     <span className="text-sm text-gray-400">
-                      {new Date(notification.created_at).toLocaleDateString()}
+                      {new Date(notification.$createdAt).toLocaleDateString('fr-FR')}
                     </span>
                   </div>
                   {!notification.read && (
                     <button
-                      onClick={() => markAsRead(notification.id)}
+                      onClick={() => markAsRead(notification.$id)}
                       className="text-sm text-blue-600 hover:text-blue-800"
                     >
-                      Mark as read
+                      Marquer comme lu
                     </button>
                   )}
                 </div>

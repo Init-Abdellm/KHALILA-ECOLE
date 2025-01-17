@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { databases } from "@/lib/appwrite";
+import { Query } from "appwrite";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { format } from "date-fns";
@@ -10,19 +11,15 @@ const Events = () => {
   const { data: events, isLoading } = useQuery({
     queryKey: ["events"],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("events")
-        .select(`
-          *,
-          profiles:created_by (
-            first_name,
-            last_name
-          )
-        `)
-        .order("date", { ascending: true });
-
-      if (error) throw error;
-      return data;
+      const response = await databases.listDocuments(
+        process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID!,
+        'events',
+        [
+          Query.orderAsc('date'),
+          Query.join('profiles', 'created_by', 'firstName,lastName')
+        ]
+      );
+      return response.documents;
     },
   });
 
@@ -51,7 +48,7 @@ const Events = () => {
       <h1 className="text-4xl font-bold text-center mb-12">Événements à Venir</h1>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
         {events?.map((event) => (
-          <Card key={event.id} className="overflow-hidden hover:shadow-lg transition-shadow">
+          <Card key={event.$id} className="overflow-hidden hover:shadow-lg transition-shadow">
             <CardHeader>
               <CardTitle>{event.title}</CardTitle>
             </CardHeader>

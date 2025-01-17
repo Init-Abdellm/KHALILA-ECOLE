@@ -4,27 +4,50 @@ import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@
 import { Button } from "@/components/ui/button";
 import { Eye, Edit, Users, Loader2 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { db } from "@/lib/database";
 import { ClassManagementDialog } from "@/components/director/ClassManagementDialog";
 import { TimetableManagementDialog } from "@/components/director/TimetableManagementDialog";
+import { Query } from "appwrite";
+import { Class, Profile, StudentClass } from "@/types/database";
+
+interface ClassWithDetails extends Class {
+  teacher?: Profile;
+  studentCount?: number;
+}
 
 const Classes = () => {
-  const { data: classes, isLoading } = useQuery({
+  const { data: classes, isLoading } = useQuery<ClassWithDetails[]>({
     queryKey: ['classes'],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('classes')
-        .select(`
-          *,
-          teacher:profiles!classes_teacher_id_fkey (
-            first_name,
-            last_name
-          ),
-          students_classes (count)
-        `);
-      
+      // Get all classes
+      const { data: classesData, error } = await db.getClasses();
+
       if (error) throw error;
-      return data || [];
+
+      // Get teachers for these classes
+      const teacherIds = [...new Set((classesData as Class[])?.map(class_ => class_.teacher_id) || [])];
+      const teachersData = await Promise.all(
+        teacherIds.map(id => db.getProfile(id))
+      );
+      const teachersMap = new Map(
+        teachersData
+          .filter(({ data }) => data)
+          .map(({ data }) => [data.user_id, data])
+      );
+
+      // Get student counts for these classes
+      const { data: studentClasses } = await db.getStudentClasses();
+      const studentCountMap = (studentClasses as StudentClass[] || []).reduce((acc, sc) => {
+        acc.set(sc.class_id, (acc.get(sc.class_id) || 0) + 1);
+        return acc;
+      }, new Map<string, number>());
+
+      // Combine all data
+      return (classesData as Class[])?.map(class_ => ({
+        ...class_,
+        teacher: teachersMap.get(class_.teacher_id),
+        studentCount: studentCountMap.get(class_.$id) || 0
+      })) || [];
     }
   });
 
@@ -62,15 +85,15 @@ const Classes = () => {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {classes.map((class_) => (
-                <TableRow key={class_.id}>
+              {classes?.map((class_) => (
+                <TableRow key={class_.$id}>
                   <TableCell className="font-medium">{class_.name}</TableCell>
                   <TableCell>{class_.level}</TableCell>
                   <TableCell>
                     {class_.teacher?.first_name} {class_.teacher?.last_name}
                   </TableCell>
                   <TableCell>
-                    {class_.students_classes?.[0]?.count || 0}/{class_.capacity}
+                    {class_.studentCount}/{class_.capacity}
                   </TableCell>
                   <TableCell>{class_.room}</TableCell>
                   <TableCell className="capitalize">{class_.type}</TableCell>

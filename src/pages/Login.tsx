@@ -1,35 +1,52 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate, useLocation, Link } from "react-router-dom";
-import { Auth } from "@supabase/auth-ui-react";
-import { ThemeSupa } from "@supabase/auth-ui-shared";
-import { supabase } from "@/integrations/supabase/client";
-import { useAuth, useProfile } from "@/lib/auth";
 import { Card } from "@/components/ui/card";
 import { motion } from "framer-motion";
 import { ArrowLeft } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { toast } from "@/components/ui/use-toast";
+import { account } from "@/integrations/appwrite/client";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 const Login = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { user } = useAuth();
-  const { profile } = useProfile();
   const { t } = useTranslation();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    if (user?.email === 'admin@admin.com') {
-      const from = location.state?.from?.pathname || '/admin';
-      navigate(from, { replace: true });
-      return;
-    }
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
 
-    if (user && profile) {
-      const from = location.state?.from?.pathname || getDefaultRoute(profile.role);
+    try {
+      await account.createEmailSession(email, password);
+      const user = await account.get();
+      
+      // Get user role from custom attributes or a separate collection
+      const role = user.prefs?.role || 'student';
+      
+      toast({
+        title: t('login.success'),
+        description: t('login.success'),
+      });
+
+      const from = location.state?.from?.pathname || getDefaultRoute(role);
       navigate(from, { replace: true });
+    } catch (error: any) {
+      toast({
+        title: t('login.error'),
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
     }
-  }, [user, profile, navigate, location]);
+  };
 
   const getDefaultRoute = (role: string | null) => {
     switch (role) {
@@ -45,31 +62,6 @@ const Login = () => {
         return '/';
     }
   };
-
-  useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === 'SIGNED_IN') {
-        toast({
-          title: t('login.success'),
-          description: t('login.success'),
-        });
-      } else if (event === 'SIGNED_OUT') {
-        toast({
-          title: t('common.logout'),
-          description: t('common.logout'),
-        });
-      } else if (event === 'PASSWORD_RECOVERY') {
-        toast({
-          title: t('login.forgotPassword'),
-          description: t('login.forgotPassword'),
-        });
-      }
-    });
-
-    return () => {
-      subscription.unsubscribe();
-    };
-  }, [t]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/5 to-secondary/5 flex items-center justify-center p-4">
@@ -104,40 +96,45 @@ const Login = () => {
         </motion.div>
 
         <Card className="p-6 shadow-lg bg-white/80 backdrop-blur-sm border-0 ring-1 ring-black/5">
-          <Auth
-            supabaseClient={supabase}
-            appearance={{
-              theme: ThemeSupa,
-              variables: {
-                default: {
-                  colors: {
-                    brand: '#0B3C5D',
-                    brandAccent: '#F16522',
-                  },
-                },
-              },
-              className: {
-                container: 'w-full',
-                button: 'w-full px-4 py-2 text-white bg-primary hover:bg-primary-dark transition-colors duration-200',
-                input: 'w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors duration-200',
-                label: 'text-sm font-medium text-gray-700',
-                message: 'text-sm text-red-600',
-              },
-            }}
-            providers={[]}
-            redirectTo={window.location.origin}
-            localization={{
-              variables: {
-                sign_in: {
-                  email_label: t('login.email'),
-                  password_label: t('login.password'),
-                  button_label: t('login.submit'),
-                  loading_button_label: t('login.loading'),
-                  link_text: t('login.forgotPassword'),
-                },
-              },
-            }}
-          />
+          <form onSubmit={handleLogin} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="email">{t('login.email')}</Label>
+              <Input
+                id="email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                className="w-full"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="password">{t('login.password')}</Label>
+              <Input
+                id="password"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                className="w-full"
+              />
+            </div>
+            <Button
+              type="submit"
+              className="w-full"
+              disabled={loading}
+            >
+              {loading ? t('login.loading') : t('login.submit')}
+            </Button>
+            <div className="text-center">
+              <Link
+                to="/forgot-password"
+                className="text-sm text-primary hover:text-primary-dark transition-colors duration-200"
+              >
+                {t('login.forgotPassword')}
+              </Link>
+            </div>
+          </form>
         </Card>
       </div>
     </div>

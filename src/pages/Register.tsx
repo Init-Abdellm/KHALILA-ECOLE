@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
+import { account } from "@/integrations/appwrite/client";
+import { ID } from "appwrite";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -22,19 +23,20 @@ const Register = () => {
     setLoading(true);
 
     try {
-      const { error: signUpError } = await supabase.auth.signUp({
+      // Create user account
+      const user = await account.create(
+        ID.unique(),
         email,
         password,
-        options: {
-          data: {
-            first_name: firstName,
-            last_name: lastName,
-            role: 'student'
-          }
-        }
-      });
+        firstName + ' ' + lastName
+      );
 
-      if (signUpError) throw signUpError;
+      // Set user preferences (role and name details)
+      await account.updatePrefs({
+        role: 'student',
+        firstName,
+        lastName
+      });
 
       toast({
         title: "Inscription réussie",

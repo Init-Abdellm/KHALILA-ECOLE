@@ -3,12 +3,15 @@ import DashboardLayout from "@/components/DashboardLayout";
 import { Card } from "@/components/ui/card";
 import { Bell, Info, AlertTriangle, CheckCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { supabase } from "@/integrations/supabase/client";
+import { db } from "@/lib/database";
 import { useToast } from "@/components/ui/use-toast";
 import { useProfile } from "@/lib/auth";
+import { Query } from "appwrite";
+import { databases } from "@/integrations/appwrite/client";
+import { Notification } from "@/types/database";
 
 const Notifications = () => {
-  const [notifications, setNotifications] = useState<any[]>([]);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
   const { toast } = useToast();
   const { profile } = useProfile();
 
@@ -18,10 +21,7 @@ const Notifications = () => {
 
   const fetchNotifications = async () => {
     try {
-      const { data, error } = await supabase
-        .from('notifications')
-        .select('*')
-        .order('created_at', { ascending: false });
+      const { data, error } = await db.getNotifications(profile?.id || '');
 
       if (error) throw error;
       setNotifications(data || []);
@@ -37,12 +37,23 @@ const Notifications = () => {
 
   const markAllAsRead = async () => {
     try {
-      const { error } = await supabase
-        .from('notifications')
-        .update({ read: true })
-        .eq('user_id', profile?.id);
+      if (!profile?.id) return;
 
-      if (error) throw error;
+      const { data: unreadNotifications } = await db.getNotifications(profile.id);
+      
+      // Update all unread notifications
+      await Promise.all(
+        (unreadNotifications || [])
+          .filter(notification => !notification.read)
+          .map(notification =>
+            databases.updateDocument(
+              import.meta.env.VITE_APPWRITE_DATABASE_ID,
+              'notifications',
+              notification.$id,
+              { read: true }
+            )
+          )
+      );
       
       await fetchNotifications();
       toast({
@@ -87,7 +98,7 @@ const Notifications = () => {
           ) : (
             notifications.map((notification) => (
               <div
-                key={notification.id}
+                key={notification.$id}
                 className={`flex items-start gap-4 p-4 ${
                   notification.read ? 'bg-neutral-50' : 'bg-white'
                 } rounded-lg`}
@@ -97,7 +108,7 @@ const Notifications = () => {
                   <h3 className="font-semibold">{notification.title}</h3>
                   <p className="text-gray-600">{notification.message}</p>
                   <p className="text-sm text-gray-500 mt-1">
-                    {new Date(notification.created_at).toLocaleDateString("fr-FR")}
+                    {new Date(notification.$createdAt).toLocaleDateString("fr-FR")}
                   </p>
                 </div>
               </div>

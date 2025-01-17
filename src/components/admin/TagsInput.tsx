@@ -3,7 +3,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { X } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+import { databases } from "@/lib/appwrite";
 import { useQuery } from "@tanstack/react-query";
 
 interface TagsInputProps {
@@ -22,10 +22,16 @@ export function TagsInput({ value = [], onChange, label }: TagsInputProps) {
   const { data: suggestedTags } = useQuery<SuggestedTag[]>({
     queryKey: ['suggested-tags'],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .rpc('get_suggested_tags');
-      if (error) throw error;
-      return data || [];
+      try {
+        const response = await databases.listDocuments(
+          process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID!,
+          'suggested_tags'
+        );
+        return response.documents.map(doc => ({ tag: doc.tag }));
+      } catch (error) {
+        console.error('Error fetching suggested tags:', error);
+        return [];
+      }
     }
   });
 

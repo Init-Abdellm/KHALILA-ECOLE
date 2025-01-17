@@ -4,23 +4,24 @@ import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@
 import { Button } from "@/components/ui/button";
 import { Eye, Mail, Phone, Loader2 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { db } from "@/lib/database";
 import { UserManagementDialog } from "@/components/admin/UserManagementDialog";
 import { useTranslation } from "react-i18next";
 import { useToast } from "@/hooks/use-toast";
+import { Query } from "appwrite";
+import { Profile } from "@/types/database";
 
 const Users = () => {
   const { t } = useTranslation();
   const { toast } = useToast();
 
-  const { data: users = [], isLoading, error, refetch } = useQuery({
+  const { data: users = [], isLoading, error, refetch } = useQuery<Profile[]>({
     queryKey: ['users'],
     queryFn: async () => {
       try {
-        const { data, error } = await supabase
-          .from('profiles')
-          .select('*')
-          .order('created_at', { ascending: false });
+        const { data, error } = await db.getProfiles([
+          Query.orderDesc('$createdAt')
+        ]);
         
         if (error) {
           toast({
@@ -81,7 +82,7 @@ const Users = () => {
             </TableHeader>
             <TableBody>
               {users.map((user) => (
-                <TableRow key={user.id}>
+                <TableRow key={user.$id}>
                   <TableCell className="font-medium">
                     {user.first_name} {user.last_name}
                   </TableCell>
@@ -97,7 +98,7 @@ const Users = () => {
                       <UserManagementDialog
                         mode="edit"
                         userData={{
-                          id: user.id,
+                          id: user.$id,
                           email: user.email || '',
                           firstName: user.first_name || '',
                           lastName: user.last_name || '',

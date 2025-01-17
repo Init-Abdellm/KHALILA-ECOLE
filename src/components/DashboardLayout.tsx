@@ -1,11 +1,12 @@
 import { useState, useEffect } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { account, databases, client } from "@/lib/appwrite";
 import { useProfile } from "@/lib/auth";
 import { Header } from "./dashboard/Header";
 import { Sidebar } from "./dashboard/Sidebar";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Card } from "./ui/card";
 import { cn } from "@/lib/utils";
+import { ID, Query } from "appwrite";
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -27,35 +28,33 @@ const DashboardLayout = ({ children, title, role }: DashboardLayoutProps) => {
     if (!profile?.id) return;
 
     const fetchUnreadNotifications = async () => {
-      const { count } = await supabase
-        .from('notifications')
-        .select('*', { count: 'exact', head: true })
-        .eq('user_id', profile.id)
-        .eq('read', false);
-
-      setUnreadNotifications(count || 0);
+      try {
+        const response = await databases.listDocuments(
+          import.meta.env.VITE_APPWRITE_DATABASE_ID,
+          'notifications',
+          [
+            Query.equal('user_id', profile.id),
+            Query.equal('read', false)
+          ]
+        );
+        setUnreadNotifications(response.total);
+      } catch (error) {
+        console.error('Error fetching notifications:', error);
+      }
     };
 
     fetchUnreadNotifications();
 
-    const channel = supabase
-      .channel('notifications')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'notifications',
-          filter: `user_id=eq.${profile.id}`,
-        },
-        () => {
-          fetchUnreadNotifications();
-        }
-      )
-      .subscribe();
+    // Subscribe to realtime updates
+    const unsubscribe = client.subscribe(
+      `databases.${import.meta.env.VITE_APPWRITE_DATABASE_ID}.collections.notifications.documents`,
+      (response) => {
+        fetchUnreadNotifications();
+      }
+    );
 
     return () => {
-      supabase.removeChannel(channel);
+      unsubscribe();
     };
   }, [profile?.id]);
 

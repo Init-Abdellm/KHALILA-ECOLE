@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { LogOut, Menu, Bell } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
+import { account } from "@/lib/appwrite";
 import { toast } from "@/components/ui/use-toast";
 import { Profile } from "@/lib/auth";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -35,8 +35,7 @@ export const Header = ({
 
   const handleLogout = async () => {
     try {
-      const { error } = await supabase.auth.signOut();
-      if (error) throw error;
+      await account.deleteSession('current');
       navigate('/login');
     } catch (error) {
       toast({
@@ -71,7 +70,7 @@ export const Header = ({
               <div>
                 <h1 className="text-xl md:text-2xl font-bold text-primary">{t(title)}</h1>
                 <p className="text-sm text-gray-600">
-                  {profile?.first_name} {profile?.last_name} - {t(`common.role.${role.toLowerCase()}`)}
+                  {profile?.firstName} {profile?.lastName} - {t(`common.role.${role.toLowerCase()}`)}
                 </p>
               </div>
             </div>

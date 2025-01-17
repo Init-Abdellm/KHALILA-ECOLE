@@ -2,7 +2,8 @@ import { useState, useEffect } from "react";
 import DashboardLayout from "@/components/DashboardLayout";
 import { Card } from "@/components/ui/card";
 import { useToast } from "@/components/ui/use-toast";
-import { supabase } from "@/integrations/supabase/client";
+import { db } from "@/lib/database";
+import { Query } from "appwrite";
 import {
   BarChart,
   Bar,
@@ -31,32 +32,30 @@ const Stats = () => {
   const fetchStats = async () => {
     try {
       // Fetch students count
-      const { count: studentsCount } = await supabase
-        .from("profiles")
-        .select("*", { count: "exact", head: true })
-        .eq("role", "Étudiant");
+      const { data: students } = await db.getProfiles([
+        Query.equal('role', 'Étudiant')
+      ]);
+      const studentsCount = students?.length || 0;
 
       // Fetch teachers count
-      const { count: teachersCount } = await supabase
-        .from("profiles")
-        .select("*", { count: "exact", head: true })
-        .eq("role", "Professeur");
+      const { data: teachers } = await db.getProfiles([
+        Query.equal('role', 'Professeur')
+      ]);
+      const teachersCount = teachers?.length || 0;
 
       // Fetch classes count
-      const { count: classesCount } = await supabase
-        .from("classes")
-        .select("*", { count: "exact", head: true });
+      const { data: classes } = await db.getClasses();
+      const classesCount = classes?.length || 0;
 
       // Fetch courses count
-      const { count: coursesCount } = await supabase
-        .from("courses")
-        .select("*", { count: "exact", head: true });
+      const { data: courses } = await db.getCourses();
+      const coursesCount = courses?.length || 0;
 
       setStats({
-        totalStudents: studentsCount || 0,
-        totalTeachers: teachersCount || 0,
-        totalClasses: classesCount || 0,
-        totalCourses: coursesCount || 0,
+        totalStudents: studentsCount,
+        totalTeachers: teachersCount,
+        totalClasses: classesCount,
+        totalCourses: coursesCount,
       });
     } catch (error) {
       console.error("Error fetching stats:", error);
@@ -70,16 +69,15 @@ const Stats = () => {
 
   const fetchMonthlySignups = async () => {
     try {
-      const { data, error } = await supabase
-        .from("profiles")
-        .select("created_at")
-        .order("created_at");
+      const { data, error } = await db.getProfiles([
+        Query.orderAsc('$createdAt')
+      ]);
 
       if (error) throw error;
 
       // Process data to get monthly signups
-      const monthlyCounts = data.reduce((acc, { created_at }) => {
-        const month = new Date(created_at).toLocaleString("fr-FR", {
+      const monthlyCounts = data.reduce((acc, profile) => {
+        const month = new Date(profile.$createdAt).toLocaleString("fr-FR", {
           month: "long",
           year: "numeric",
         });

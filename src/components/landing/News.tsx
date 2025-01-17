@@ -1,13 +1,14 @@
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { databases, client } from "@/lib/appwrite";
+import { Query } from "appwrite";
 import { Card } from "@/components/ui/card";
 import { CalendarDays, MapPin } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { motion } from "framer-motion";
 
 interface Event {
-  id: string;
+  $id: string;
   title: string;
   description: string;
   date: string;
@@ -23,14 +24,12 @@ const News = () => {
     queryKey: ["events"],
     queryFn: async () => {
       try {
-        const { data, error } = await supabase
-          .from("events")
-          .select("*")
-          .order("date", { ascending: true })
-          .limit(3);
-
-        if (error) throw error;
-        return data as Event[];
+        const response = await databases.listDocuments(
+          process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID!,
+          'events',
+          [Query.orderAsc('date'), Query.limit(3)]
+        );
+        return response.documents as Event[];
       } catch (err) {
         console.error("Error fetching events:", err);
         throw err;
@@ -59,39 +58,30 @@ const News = () => {
   }, [error, toast]);
 
   useEffect(() => {
-    const channel = supabase
-      .channel("events-changes")
-      .on(
-        "postgres_changes",
-        {
-          event: "*",
-          schema: "public",
-          table: "events",
-        },
-        async (payload) => {
-          try {
-            const { data, error } = await supabase
-              .from("events")
-              .select("*")
-              .order("date", { ascending: true })
-              .limit(3);
-
-            if (error) throw error;
-            if (data) setEvents(data);
-          } catch (err) {
-            console.error("Failed to refresh events:", err);
-            toast({
-              title: "Error",
-              description: "Failed to refresh events. Please try again later.",
-              variant: "destructive",
-            });
-          }
+    const unsubscribe = client.subscribe(
+      `databases.${import.meta.env.VITE_APPWRITE_DATABASE_ID}.collections.events.documents`,
+      (response) => {
+        try {
+          databases.listDocuments(
+            import.meta.env.VITE_APPWRITE_DATABASE_ID,
+            'events',
+            [Query.orderAsc('date'), Query.limit(3)]
+          ).then(response => {
+            setEvents(response.documents as Event[]);
+          });
+        } catch (err) {
+          console.error("Failed to refresh events:", err);
+          toast({
+            title: "Error",
+            description: "Failed to refresh events. Please try again later.",
+            variant: "destructive",
+          });
         }
-      )
-      .subscribe();
+      }
+    );
 
     return () => {
-      supabase.removeChannel(channel);
+      unsubscribe();
     };
   }, [toast]);
 
@@ -135,7 +125,7 @@ const News = () => {
           ) : (
             events.map((event, index) => (
               <motion.div
-                key={event.id}
+                key={event.$id}
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: index * 0.1 }}

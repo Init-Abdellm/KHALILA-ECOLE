@@ -5,9 +5,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
+import { databases } from "@/lib/appwrite";
 import { Calendar, Clock, Plus, Trash } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
+import { ID, Query } from "appwrite";
 
 export function TimetableManagementDialog() {
   const [isOpen, setIsOpen] = useState(false);
@@ -29,24 +30,22 @@ export function TimetableManagementDialog() {
   const { data: classes } = useQuery({
     queryKey: ['available-classes'],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('classes')
-        .select('*');
-      
-      if (error) throw error;
-      return data;
+      const response = await databases.listDocuments(
+        process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID!,
+        'classes'
+      );
+      return response.documents;
     },
   });
 
   const { data: courses } = useQuery({
     queryKey: ['available-courses'],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('courses')
-        .select('*');
-      
-      if (error) throw error;
-      return data;
+      const response = await databases.listDocuments(
+        process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID!,
+        'courses'
+      );
+      return response.documents;
     },
   });
 
@@ -76,54 +75,58 @@ export function TimetableManagementDialog() {
 
     try {
       // Create timetable template
-      const { data: template, error: templateError } = await supabase
-        .from('timetable_templates')
-        .insert({
+      const template = await databases.createDocument(
+        process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID!,
+        'timetable_templates',
+        ID.unique(),
+        {
           name: formData.name,
           description: formData.description,
-        })
-        .select()
-        .single();
-
-      if (templateError) throw templateError;
+        }
+      );
 
       // Create timetable entries
-      const entriesData = entries.map(entry => ({
-        template_id: template.id,
-        class_id: formData.classId,
-        course_id: entry.courseId,
-        day_of_week: entry.dayOfWeek,
-        start_time: entry.startTime,
-        end_time: entry.endTime,
-        room: entry.room,
-      }));
+      await Promise.all(
+        entries.map(entry =>
+          databases.createDocument(
+            process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID!,
+            'timetable_entries',
+            ID.unique(),
+            {
+              template_id: template.$id,
+              class_id: formData.classId,
+              course_id: entry.courseId,
+              day_of_week: entry.dayOfWeek,
+              start_time: entry.startTime,
+              end_time: entry.endTime,
+              room: entry.room,
+            }
+          )
+        )
+      );
 
-      const { error: entriesError } = await supabase
-        .from('timetable_entries')
-        .insert(entriesData);
+      // Get affected users
+      const studentsResponse = await databases.listDocuments(
+        process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID!,
+        'students_classes',
+        [Query.equal('class_id', formData.classId)]
+      );
 
-      if (entriesError) throw entriesError;
+      const classResponse = await databases.getDocument(
+        process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID!,
+        'classes',
+        formData.classId
+      );
 
-      // Create notifications for affected users
-      const { data: classUsers } = await supabase
-        .from('students_classes')
-        .select('student_id')
-        .eq('class_id', formData.classId);
-
-      const { data: classData } = await supabase
-        .from('classes')
-        .select('teacher_id')
-        .eq('id', formData.classId)
-        .single();
-
+      // Create notifications
       const notifications = [
         {
-          user_id: classData?.teacher_id,
+          user_id: classResponse.teacher_id,
           title: "New Timetable",
           message: `A new timetable has been created for your class: ${formData.name}`,
           type: "info"
         },
-        ...(classUsers || []).map(({ student_id }) => ({
+        ...studentsResponse.documents.map(({ student_id }) => ({
           user_id: student_id,
           title: "New Timetable",
           message: `A new timetable has been created for your class: ${formData.name}`,
@@ -131,11 +134,16 @@ export function TimetableManagementDialog() {
         }))
       ];
 
-      const { error: notificationError } = await supabase
-        .from('notifications')
-        .insert(notifications);
-
-      if (notificationError) throw notificationError;
+      await Promise.all(
+        notifications.map(notification =>
+          databases.createDocument(
+            process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID!,
+            'notifications',
+            ID.unique(),
+            notification
+          )
+        )
+      );
 
       toast({
         title: "Success",
@@ -208,7 +216,7 @@ export function TimetableManagementDialog() {
               </SelectTrigger>
               <SelectContent>
                 {classes?.map((class_) => (
-                  <SelectItem key={class_.id} value={class_.id}>
+                  <SelectItem key={class_.$id} value={class_.$id}>
                     {class_.name}
                   </SelectItem>
                 ))}
@@ -272,7 +280,7 @@ export function TimetableManagementDialog() {
                       </SelectTrigger>
                       <SelectContent>
                         {courses?.map((course) => (
-                          <SelectItem key={course.id} value={course.id}>
+                          <SelectItem key={course.$id} value={course.$id}>
                             {course.name}
                           </SelectItem>
                         ))}

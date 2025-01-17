@@ -1,7 +1,6 @@
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
 import DashboardLayout from "@/components/DashboardLayout";
 import { useProfile } from "@/lib/auth";
 import { Notification } from "@/types/database";
@@ -9,6 +8,9 @@ import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/components/ui/use-toast";
 import { useTranslation } from "react-i18next";
+import { db } from "@/lib/database";
+import { Query } from "appwrite";
+import { databases } from "@/integrations/appwrite/client";
 
 const TeacherNotifications = () => {
   const { profile } = useProfile();
@@ -18,24 +20,22 @@ const TeacherNotifications = () => {
   const { data: notifications, isLoading, refetch } = useQuery({
     queryKey: ["notifications", profile?.id],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("notifications")
-        .select("*")
-        .eq("user_id", profile?.id)
-        .order("created_at", { ascending: false });
-
+      if (!profile?.id) return [];
+      const { data, error } = await db.getNotifications(profile.id);
       if (error) throw error;
-      return data as Notification[];
+      return data || [];
     },
     enabled: !!profile?.id,
   });
 
   const markAsRead = async (notificationId: string) => {
     try {
-      const { error } = await supabase
-        .from("notifications")
-        .update({ read: true })
-        .eq("id", notificationId);
+      const { error } = await databases.updateDocument(
+        import.meta.env.VITE_APPWRITE_DATABASE_ID,
+        'notifications',
+        notificationId,
+        { read: true }
+      );
 
       if (error) throw error;
       
@@ -70,7 +70,7 @@ const TeacherNotifications = () => {
           <div className="space-y-4">
             {notifications.map((notification) => (
               <div
-                key={notification.id}
+                key={notification.$id}
                 className={`p-4 rounded-lg border ${
                   notification.read ? "bg-gray-50" : "bg-white"
                 }`}
@@ -80,14 +80,14 @@ const TeacherNotifications = () => {
                     <h3 className="font-semibold text-lg">{notification.title}</h3>
                     <p className="text-gray-600 mt-1">{notification.message}</p>
                     <p className="text-sm text-gray-500 mt-2">
-                      {new Date(notification.created_at).toLocaleDateString()}
+                      {new Date(notification.$createdAt).toLocaleDateString()}
                     </p>
                   </div>
                   {!notification.read && (
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => markAsRead(notification.id)}
+                      onClick={() => markAsRead(notification.$id)}
                     >
                       {t("notifications.mark_as_read")}
                     </Button>

@@ -6,10 +6,12 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/components/ui/use-toast";
-import { supabase } from "@/integrations/supabase/client";
 import { BookOpen } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { useProfile } from "@/lib/auth";
+import { db } from "@/lib/database";
+import { Query } from "appwrite";
+import { ID } from "appwrite";
 
 export function CourseManagementDialog() {
   const [isOpen, setIsOpen] = useState(false);
@@ -27,11 +29,8 @@ export function CourseManagementDialog() {
   const { data: classes } = useQuery({
     queryKey: ['teacher-classes', profile?.id],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('classes')
-        .select('id, name')
-        .eq('teacher_id', profile?.id);
-      
+      if (!profile?.id) return [];
+      const { data, error } = await db.getClasses();
       if (error) throw error;
       return data;
     },
@@ -44,41 +43,43 @@ export function CourseManagementDialog() {
 
     try {
       // Create course
-      const { data: course, error: courseError } = await supabase
-        .from('courses')
-        .insert({
-          name: formData.name,
-          description: formData.description,
-          class_id: formData.classId,
-          teacher_id: profile?.id,
-          schedule_day: formData.scheduleDay,
-          schedule_time: formData.scheduleTime,
-        })
-        .select()
-        .single();
+      const { data: course, error: courseError } = await db.getCourses([
+        Query.equal('name', formData.name),
+        Query.equal('class_id', formData.classId)
+      ]);
 
       if (courseError) throw courseError;
+      if (course && course.length > 0) {
+        throw new Error('A course with this name already exists for this class');
+      }
+
+      const { data: newCourse, error: createError } = await db.createCourse({
+        name: formData.name,
+        description: formData.description,
+        class_id: formData.classId,
+        teacher_id: profile?.id || '',
+        schedule_day: formData.scheduleDay.toLowerCase(),
+        schedule_time: formData.scheduleTime,
+      });
+
+      if (createError) throw createError;
 
       // Get affected students
-      const { data: students } = await supabase
-        .from('students_classes')
-        .select('student_id')
-        .eq('class_id', formData.classId);
+      const { data: students } = await db.getStudentClasses([
+        Query.equal('class_id', formData.classId)
+      ]);
 
       // Create notifications for affected students
       if (students && students.length > 0) {
-        const notifications = students.map(({ student_id }) => ({
-          user_id: student_id,
-          title: "New Course Added",
-          message: `A new course "${formData.name}" has been added to your schedule on ${formData.scheduleDay}s at ${formData.scheduleTime}`,
-          type: "info"
-        }));
-
-        const { error: notificationError } = await supabase
-          .from('notifications')
-          .insert(notifications);
-
-        if (notificationError) throw notificationError;
+        await Promise.all(students.map(student => 
+          db.createNotification({
+            user_id: student.student_id,
+            title: "New Course Added",
+            message: `A new course "${formData.name}" has been added to your schedule on ${formData.scheduleDay}s at ${formData.scheduleTime}`,
+            type: "info",
+            read: false
+          })
+        ));
       }
 
       toast({
@@ -145,7 +146,7 @@ export function CourseManagementDialog() {
               </SelectTrigger>
               <SelectContent>
                 {classes?.map((class_) => (
-                  <SelectItem key={class_.id} value={class_.id}>
+                  <SelectItem key={class_.$id} value={class_.$id}>
                     {class_.name}
                   </SelectItem>
                 ))}

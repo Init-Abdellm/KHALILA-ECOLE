@@ -5,9 +5,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
+import { databases } from "@/lib/appwrite";
 import { School, Upload, Search, Tags } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
+import { ID, Query } from "appwrite";
 import * as XLSX from 'xlsx';
 
 export function ClassManagementDialog() {
@@ -28,31 +29,30 @@ export function ClassManagementDialog() {
   const { data: teachers } = useQuery({
     queryKey: ['available-teachers'],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('id, first_name, last_name, tags')
-        .eq('role', 'teacher');
-      
-      if (error) throw error;
-      return data;
+      const response = await databases.listDocuments(
+        process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID!,
+        'profiles',
+        [Query.equal('role', 'teacher')]
+      );
+      return response.documents;
     },
   });
 
   const { data: students } = useQuery({
     queryKey: ['available-students', searchTerm],
     queryFn: async () => {
-      const query = supabase
-        .from('profiles')
-        .select('id, first_name, last_name, tags')
-        .eq('role', 'student');
-
+      const queries = [Query.equal('role', 'student')];
       if (searchTerm) {
-        query.or(`first_name.ilike.%${searchTerm}%,last_name.ilike.%${searchTerm}%,tags.cs.{${searchTerm}}`);
+        queries.push(Query.search('firstName', searchTerm));
+        queries.push(Query.search('lastName', searchTerm));
+        queries.push(Query.search('tags', searchTerm));
       }
-
-      const { data, error } = await query;
-      if (error) throw error;
-      return data;
+      const response = await databases.listDocuments(
+        process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID!,
+        'profiles',
+        queries
+      );
+      return response.documents;
     },
   });
 
@@ -72,13 +72,15 @@ export function ClassManagementDialog() {
         // Process student data and find matching profiles
         const studentIds = await Promise.all(
           jsonData.map(async (row: any) => {
-            const { data } = await supabase
-              .from('profiles')
-              .select('id')
-              .eq('first_name', row.first_name)
-              .eq('last_name', row.last_name)
-              .single();
-            return data?.id;
+            const response = await databases.listDocuments(
+              process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID!,
+              'profiles',
+              [
+                Query.equal('firstName', row.first_name),
+                Query.equal('lastName', row.last_name)
+              ]
+            );
+            return response.documents[0]?.$id;
           })
         );
 
@@ -104,33 +106,35 @@ export function ClassManagementDialog() {
 
     try {
       // Create class
-      const { data: classData, error: classError } = await supabase
-        .from('classes')
-        .insert({
+      const classDoc = await databases.createDocument(
+        process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID!,
+        'classes',
+        ID.unique(),
+        {
           name: formData.name,
           level: formData.level,
           capacity: parseInt(formData.capacity),
           room: formData.room,
           teacher_id: formData.teacherId,
           type: formData.type,
-        })
-        .select()
-        .single();
-
-      if (classError) throw classError;
+        }
+      );
 
       // Assign students to class
       if (selectedStudents.length > 0) {
-        const { error: assignError } = await supabase
-          .from('students_classes')
-          .insert(
-            selectedStudents.map(studentId => ({
-              student_id: studentId,
-              class_id: classData.id
-            }))
-          );
-
-        if (assignError) throw assignError;
+        await Promise.all(
+          selectedStudents.map(studentId =>
+            databases.createDocument(
+              process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID!,
+              'students_classes',
+              ID.unique(),
+              {
+                student_id: studentId,
+                class_id: classDoc.$id
+              }
+            )
+          )
+        );
       }
 
       // Create notifications for teacher and students
@@ -149,11 +153,16 @@ export function ClassManagementDialog() {
         }))
       ];
 
-      const { error: notificationError } = await supabase
-        .from('notifications')
-        .insert(notifications);
-
-      if (notificationError) throw notificationError;
+      await Promise.all(
+        notifications.map(notification =>
+          databases.createDocument(
+            process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID!,
+            'notifications',
+            ID.unique(),
+            notification
+          )
+        )
+      );
 
       toast({
         title: "Success",
@@ -247,8 +256,8 @@ export function ClassManagementDialog() {
               </SelectTrigger>
               <SelectContent>
                 {teachers?.map((teacher) => (
-                  <SelectItem key={teacher.id} value={teacher.id}>
-                    {teacher.first_name} {teacher.last_name}
+                  <SelectItem key={teacher.$id} value={teacher.$id}>
+                    {teacher.firstName} {teacher.lastName}
                     {teacher.tags && (
                       <span className="ml-2 text-sm text-gray-500">
                         {teacher.tags.join(", ")}
@@ -290,11 +299,11 @@ export function ClassManagementDialog() {
                 <div className="max-h-40 overflow-y-auto border rounded-md p-2">
                   {students?.map((student) => (
                     <div
-                      key={student.id}
+                      key={student.$id}
                       className="flex items-center justify-between p-2 hover:bg-gray-100 rounded"
                     >
                       <div>
-                        {student.first_name} {student.last_name}
+                        {student.firstName} {student.lastName}
                         {student.tags && (
                           <span className="ml-2 text-sm text-gray-500">
                             {student.tags.join(", ")}
@@ -303,17 +312,17 @@ export function ClassManagementDialog() {
                       </div>
                       <Button
                         type="button"
-                        variant={selectedStudents.includes(student.id) ? "secondary" : "outline"}
+                        variant={selectedStudents.includes(student.$id) ? "secondary" : "outline"}
                         size="sm"
                         onClick={() => {
                           setSelectedStudents(prev =>
-                            prev.includes(student.id)
-                              ? prev.filter(id => id !== student.id)
-                              : [...prev, student.id]
+                            prev.includes(student.$id)
+                              ? prev.filter(id => id !== student.$id)
+                              : [...prev, student.$id]
                           );
                         }}
                       >
-                        {selectedStudents.includes(student.id) ? "Selected" : "Select"}
+                        {selectedStudents.includes(student.$id) ? "Selected" : "Select"}
                       </Button>
                     </div>
                   ))}

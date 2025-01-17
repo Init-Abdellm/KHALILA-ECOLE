@@ -5,47 +5,34 @@ import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@
 import { Button } from "@/components/ui/button";
 import { Download, Filter, Loader2 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { db } from "@/lib/database";
 import { toast } from "@/components/ui/use-toast";
 import * as XLSX from 'xlsx';
+import { Query } from "appwrite";
+import { Grade, Course, Profile, Class } from "@/types/database";
+
+interface GradeWithDetails extends Grade {
+  course?: Course & {
+    teacher?: Profile;
+    class?: Class;
+  };
+  student?: Profile;
+}
 
 const GradesOverview = () => {
   const [selectedClass, setSelectedClass] = useState<string | null>(null);
   const [selectedType, setSelectedType] = useState<string | null>(null);
 
-  const { data: grades, isLoading } = useQuery({
+  const { data: grades, isLoading } = useQuery<GradeWithDetails[]>({
     queryKey: ['all-grades', selectedClass, selectedType],
     queryFn: async () => {
-      const query = supabase
-        .from('grades')
-        .select(`
-          *,
-          course:courses (
-            name,
-            teacher:profiles!courses_teacher_id_fkey (
-              first_name,
-              last_name
-            ),
-            class:classes (
-              name,
-              level
-            )
-          ),
-          student:profiles!grades_student_id_fkey (
-            first_name,
-            last_name
-          )
-        `)
-        .order('created_at', { ascending: false });
-
+      // Get grades with filters
+      const filters = [Query.orderDesc('$createdAt')];
       if (selectedClass) {
-        query.eq('course.class_id', selectedClass);
-      }
-      if (selectedType) {
-        query.eq('type', selectedType);
+        filters.push(Query.equal('class_id', selectedClass));
       }
 
-      const { data, error } = await query;
+      const { data: gradesData, error } = await db.getGrades(filters);
 
       if (error) {
         console.error('Error fetching grades:', error);
@@ -56,17 +43,83 @@ const GradesOverview = () => {
         });
         return [];
       }
-      return data;
+
+      // Get courses for these grades
+      const courseIds = [...new Set((gradesData as Grade[])?.map(grade => grade.course_id) || [])];
+      const coursesData = await Promise.all(
+        courseIds.map(id => db.getCourseById(id))
+      );
+      const coursesMap = new Map(
+        coursesData
+          .filter(({ data }) => data)
+          .map(({ data }) => [data.$id, data])
+      );
+
+      // Get teachers for these courses
+      const teacherIds = [...new Set(
+        coursesData
+          .filter(({ data }) => data)
+          .map(({ data }) => data?.teacher_id)
+      )];
+      const teachersData = await Promise.all(
+        teacherIds.map(id => db.getProfile(id))
+      );
+      const teachersMap = new Map(
+        teachersData
+          .filter(({ data }) => data)
+          .map(({ data }) => [data.user_id, data])
+      );
+
+      // Get classes for these courses
+      const classIds = [...new Set(
+        coursesData
+          .filter(({ data }) => data)
+          .map(({ data }) => data?.class_id)
+      )];
+      const classesData = await Promise.all(
+        classIds.map(id => db.getClassById(id))
+      );
+      const classesMap = new Map(
+        classesData
+          .filter(({ data }) => data)
+          .map(({ data }) => [data.$id, data])
+      );
+
+      // Get students for these grades
+      const studentIds = [...new Set((gradesData as Grade[])?.map(grade => grade.student_id) || [])];
+      const studentsData = await Promise.all(
+        studentIds.map(id => db.getProfile(id))
+      );
+      const studentsMap = new Map(
+        studentsData
+          .filter(({ data }) => data)
+          .map(({ data }) => [data.user_id, data])
+      );
+
+      // Combine all data
+      return (gradesData as Grade[])?.map(grade => {
+        const course = coursesMap.get(grade.course_id);
+        const teacher = course ? teachersMap.get(course.teacher_id) : undefined;
+        const classData = course ? classesMap.get(course.class_id) : undefined;
+        const student = studentsMap.get(grade.student_id);
+
+        return {
+          ...grade,
+          course: course ? {
+            ...course,
+            teacher,
+            class: classData
+          } : undefined,
+          student
+        };
+      }) || [];
     }
   });
 
-  const { data: classes } = useQuery({
+  const { data: classes } = useQuery<Class[]>({
     queryKey: ['all-classes'],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('classes')
-        .select('*')
-        .order('name');
+      const { data, error } = await db.getClasses();
 
       if (error) {
         console.error('Error fetching classes:', error);
@@ -77,7 +130,7 @@ const GradesOverview = () => {
         });
         return [];
       }
-      return data;
+      return data || [];
     }
   });
 
@@ -92,10 +145,9 @@ const GradesOverview = () => {
       'Course': grade.course?.name,
       'Teacher': `${grade.course?.teacher?.first_name} ${grade.course?.teacher?.last_name}`,
       'Class': grade.course?.class?.name,
-      'Level': grade.course?.class?.level,
-      'Type': grade.type,
       'Grade': grade.grade,
-      'Date': new Date(grade.date).toLocaleDateString('fr-FR')
+      'Comment': grade.comment,
+      'Date': new Date(grade.$createdAt).toLocaleDateString('fr-FR')
     })));
 
     XLSX.utils.book_append_sheet(workbook, worksheet, 'Grades Overview');
@@ -126,9 +178,9 @@ const GradesOverview = () => {
               </Button>
               {classes?.map((class_) => (
                 <Button
-                  key={class_.id}
-                  variant={selectedClass === class_.id ? "default" : "outline"}
-                  onClick={() => setSelectedClass(class_.id)}
+                  key={class_.$id}
+                  variant={selectedClass === class_.$id ? "default" : "outline"}
+                  onClick={() => setSelectedClass(class_.$id)}
                 >
                   {class_.name}
                 </Button>
@@ -166,14 +218,14 @@ const GradesOverview = () => {
                   <TableHead>Cours</TableHead>
                   <TableHead>Professeur</TableHead>
                   <TableHead>Classe</TableHead>
-                  <TableHead>Type</TableHead>
                   <TableHead>Note</TableHead>
+                  <TableHead>Commentaire</TableHead>
                   <TableHead className="hidden md:table-cell">Date</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {grades?.map((grade) => (
-                  <TableRow key={grade.id}>
+                  <TableRow key={grade.$id}>
                     <TableCell className="font-medium">
                       {grade.student?.first_name} {grade.student?.last_name}
                     </TableCell>
@@ -182,10 +234,10 @@ const GradesOverview = () => {
                       {grade.course?.teacher?.first_name} {grade.course?.teacher?.last_name}
                     </TableCell>
                     <TableCell>{grade.course?.class?.name}</TableCell>
-                    <TableCell>{grade.type}</TableCell>
                     <TableCell>{grade.grade}/20</TableCell>
+                    <TableCell>{grade.comment || '-'}</TableCell>
                     <TableCell className="hidden md:table-cell">
-                      {new Date(grade.date).toLocaleDateString('fr-FR')}
+                      {new Date(grade.$createdAt).toLocaleDateString('fr-FR')}
                     </TableCell>
                   </TableRow>
                 ))}

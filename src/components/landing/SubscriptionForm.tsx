@@ -14,7 +14,8 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "@/components/ui/use-toast";
 import { Card } from "@/components/ui/card";
-import { supabase } from "@/integrations/supabase/client";
+import { databases } from "@/lib/appwrite";
+import { ID } from "appwrite";
 import { motion } from "framer-motion";
 
 const formSchema = z.object({
@@ -45,17 +46,20 @@ const SubscriptionForm = () => {
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     try {
-      const { error } = await supabase.from('subscription_forms').insert([{
-        parent_name: values.parentName,
-        parent_email: values.parentEmail,
-        parent_phone: values.parentPhone,
-        child_name: values.childName,
-        child_age: parseInt(values.childAge),
-        current_school: values.currentSchool || null,
-        message: values.message || null,
-      }]);
-
-      if (error) throw error;
+      await databases.createDocument(
+        process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID!,
+        'subscription_forms',
+        ID.unique(),
+        {
+          parent_name: values.parentName,
+          parent_email: values.parentEmail,
+          parent_phone: values.parentPhone,
+          child_name: values.childName,
+          child_age: parseInt(values.childAge),
+          current_school: values.currentSchool || null,
+          message: values.message || null,
+        }
+      );
 
       toast({
         title: "Formulaire envoyé avec succès",

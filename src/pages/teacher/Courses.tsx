@@ -4,45 +4,64 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { BookOpen, Users, Clock, Loader2 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
 import { useProfile } from "@/lib/auth";
 import { toast } from "@/components/ui/use-toast";
 import { useNavigate } from "react-router-dom";
 import { CourseManagementDialog } from "@/components/teacher/CourseManagementDialog";
+import { db } from "@/lib/database";
+import { Query } from "appwrite";
+import { Course, Class } from "@/types/database";
 
-interface CourseWithClass {
-  id: string;
-  name: string;
-  schedule_day: string;
-  schedule_time: string;
-  classes: {
-    name: string;
-    students_classes: {
-      count: number;
-    }[];
-  };
+interface CourseWithDetails extends Course {
+  class?: Class;
+  studentCount: number;
 }
 
 const Courses = () => {
   const { profile } = useProfile();
   const navigate = useNavigate();
 
-  const { data: courses, isLoading } = useQuery({
+  const { data: courses, isLoading } = useQuery<CourseWithDetails[]>({
     queryKey: ['teacher-courses', profile?.id],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('courses')
-        .select(`
-          *,
-          classes (
-            name,
-            students_classes (count)
-          )
-        `)
-        .eq('teacher_id', profile?.id);
-
+      if (!profile?.id) return [];
+      
+      // Get all courses for the teacher
+      const { data: coursesData, error } = await db.getCourses([
+        Query.equal('teacher_id', profile.id)
+      ]);
+      
       if (error) throw error;
-      return data as CourseWithClass[];
+
+      // Get class details for each course
+      const classIds = [...new Set((coursesData || []).map(course => course.class_id))];
+      const classesData = await Promise.all(
+        classIds.map(id => db.getClassById(id.toString()))
+      );
+      const classesMap = new Map(
+        classesData
+          .filter(({ data }) => data)
+          .map(({ data }) => [data.$id, data])
+      );
+
+      // Get student counts for each class
+      const studentCounts = await Promise.all(
+        classIds.map(async (classId) => {
+          const { data: students } = await db.getStudentClasses([
+            Query.equal('class_id', classId.toString())
+          ]);
+          return { classId, count: students?.length || 0 };
+        })
+      );
+      const countsMap = new Map(
+        studentCounts.map(({ classId, count }) => [classId, count])
+      );
+
+      return (coursesData || []).map(course => ({
+        ...course,
+        class: classesMap.get(course.class_id),
+        studentCount: countsMap.get(course.class_id) || 0
+      }));
     },
     enabled: !!profile?.id
   });
@@ -65,7 +84,7 @@ const Courses = () => {
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {courses?.map((course) => (
-          <Card key={course.id} className="p-4 md:p-6">
+          <Card key={course.$id} className="p-4 md:p-6">
             <div className="flex flex-col h-full">
               <div className="flex items-center justify-between mb-4">
                 <div className="p-2 rounded-full bg-primary/10">
@@ -77,12 +96,12 @@ const Courses = () => {
               </div>
               
               <h3 className="text-lg font-semibold mb-2">{course.name}</h3>
-              <p className="text-gray-600 mb-4">{course.classes?.name}</p>
+              <p className="text-gray-600 mb-4">{course.class?.name}</p>
               
               <div className="flex items-center gap-4 text-sm text-gray-600 mt-auto">
                 <div className="flex items-center gap-1">
                   <Users className="w-4 h-4" />
-                  <span>{course.classes?.students_classes?.[0]?.count || 0} élèves</span>
+                  <span>{course.studentCount} élèves</span>
                 </div>
                 <div className="flex items-center gap-1">
                   <Clock className="w-4 h-4" />
@@ -94,13 +113,13 @@ const Courses = () => {
                 <Button 
                   variant="outline" 
                   className="w-full"
-                  onClick={() => navigate(`/teacher/courses/${course.id}`)}
+                  onClick={() => navigate(`/teacher/courses/${course.$id}`)}
                 >
                   Détails
                 </Button>
                 <Button 
                   className="w-full"
-                  onClick={() => navigate(`/teacher/grades?course=${course.id}`)}
+                  onClick={() => navigate(`/teacher/grades?course=${course.$id}`)}
                 >
                   Notes
                 </Button>

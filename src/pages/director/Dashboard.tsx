@@ -5,9 +5,10 @@ import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@
 import { TrendingUp, Users, GraduationCap, Calendar as CalendarIcon } from "lucide-react";
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { db } from "@/lib/database";
 import { Loader2 } from "lucide-react";
-import type { Event } from "@/types/database";
+import { Query } from "appwrite";
+import { Event, Profile } from "@/types/database";
 
 const DirectorDashboard = () => {
   const [date, setDate] = useState<Date | undefined>(new Date());
@@ -15,46 +16,40 @@ const DirectorDashboard = () => {
   const { data: teachersCount } = useQuery({
     queryKey: ['teachers-count'],
     queryFn: async () => {
-      const { count } = await supabase
-        .from('profiles')
-        .select('*', { count: 'exact', head: true })
-        .eq('role', 'teacher');
-      return count || 0;
+      const { data } = await db.getProfiles([
+        Query.equal('role', 'Professeur')
+      ]);
+      return data?.length || 0;
     }
   });
 
   const { data: classesCount } = useQuery({
     queryKey: ['classes-count'],
     queryFn: async () => {
-      const { count } = await supabase
-        .from('classes')
-        .select('*', { count: 'exact', head: true });
-      return count || 0;
+      const { data } = await db.getClasses();
+      return data?.length || 0;
     }
   });
 
   const { data: reports, isLoading: reportsLoading } = useQuery({
     queryKey: ['recent-reports'],
     queryFn: async () => {
-      const { data } = await supabase
-        .from('events')
-        .select('*')
-        .order('created_at', { ascending: false })
-        .limit(3);
-      return (data || []) as Event[];
+      const { data } = await db.getEvents();
+      return (data || [])
+        .sort((a, b) => new Date(b.$createdAt).getTime() - new Date(a.$createdAt).getTime())
+        .slice(0, 3);
     }
   });
 
   const { data: events, isLoading: eventsLoading } = useQuery({
     queryKey: ['upcoming-events'],
     queryFn: async () => {
-      const { data } = await supabase
-        .from('events')
-        .select('*')
-        .gte('date', new Date().toISOString())
-        .order('date', { ascending: true })
-        .limit(3);
-      return (data || []) as Event[];
+      const { data } = await db.getEvents();
+      const now = new Date();
+      return (data || [])
+        .filter(event => new Date(event.date) >= now)
+        .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+        .slice(0, 3);
     }
   });
 
@@ -108,7 +103,7 @@ const DirectorDashboard = () => {
               </TableHeader>
               <TableBody>
                 {reports?.map((report) => (
-                  <TableRow key={report.id}>
+                  <TableRow key={report.$id}>
                     <TableCell className="font-medium">{report.title}</TableCell>
                     <TableCell>{new Date(report.date).toLocaleDateString('fr-FR')}</TableCell>
                   </TableRow>
@@ -125,7 +120,7 @@ const DirectorDashboard = () => {
           <CardContent>
             <div className="space-y-4">
               {events?.map((event) => (
-                <div key={event.id} className="flex items-center justify-between p-3 bg-neutral-50 rounded-lg">
+                <div key={event.$id} className="flex items-center justify-between p-3 bg-neutral-50 rounded-lg">
                   <div>
                     <div className="font-medium">{event.title}</div>
                     <div className="text-sm text-gray-500">

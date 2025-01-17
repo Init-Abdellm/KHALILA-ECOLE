@@ -2,30 +2,35 @@ import DashboardLayout from "@/components/DashboardLayout";
 import { Card } from "@/components/ui/card";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
 import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { db } from "@/lib/database";
 import { useProfile } from "@/lib/auth";
 import { Loader2 } from "lucide-react";
 import { toast } from "@/components/ui/use-toast";
+import { Query } from "appwrite";
+import { Grade, Course, Class } from "@/types/database";
+
+interface GradeWithDetails extends Grade {
+  course?: {
+    name: string;
+    class?: {
+      name: string;
+    };
+  };
+}
 
 const Grades = () => {
   const { profile } = useProfile();
 
-  const { data: grades, isLoading } = useQuery({
+  const { data: grades, isLoading } = useQuery<GradeWithDetails[]>({
     queryKey: ['student-grades', profile?.id],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('grades')
-        .select(`
-          *,
-          course:courses (
-            name,
-            class:classes (
-              name
-            )
-          )
-        `)
-        .eq('student_id', profile?.id)
-        .order('date', { ascending: false });
+      if (!profile?.id) return [];
+
+      // Get grades
+      const { data: gradesData, error } = await db.getGrades([
+        Query.equal('student_id', profile.id),
+        Query.orderDesc('$createdAt')
+      ]);
 
       if (error) {
         console.error('Error fetching grades:', error);
@@ -37,7 +42,46 @@ const Grades = () => {
         throw error;
       }
 
-      return data;
+      // Get courses for these grades
+      const courseIds = [...new Set((gradesData as Grade[])?.map(grade => grade.course_id) || [])];
+      const coursesData = await Promise.all(
+        courseIds.map(id => db.getCourseById(id))
+      );
+      const coursesMap = new Map(
+        coursesData
+          .filter(({ data }) => data)
+          .map(({ data }) => [data.$id, data])
+      );
+
+      // Get classes for these courses
+      const classIds = [...new Set(
+        coursesData
+          .filter(({ data }) => data)
+          .map(({ data }) => data?.class_id)
+      )];
+      const classesData = await Promise.all(
+        classIds.map(id => db.getClassById(id))
+      );
+      const classesMap = new Map(
+        classesData
+          .filter(({ data }) => data)
+          .map(({ data }) => [data.$id, data])
+      );
+
+      // Combine all data
+      return (gradesData as Grade[])?.map(grade => {
+        const course = coursesMap.get(grade.course_id);
+        const classData = course ? classesMap.get(course.class_id) : undefined;
+        return {
+          ...grade,
+          course: course ? {
+            name: course.name,
+            class: classData ? {
+              name: classData.name
+            } : undefined
+          } : undefined
+        };
+      }) || [];
     },
     enabled: !!profile?.id,
   });
@@ -64,20 +108,20 @@ const Grades = () => {
             <TableHeader>
               <TableRow>
                 <TableHead>Matière</TableHead>
-                <TableHead>Type</TableHead>
-                <TableHead>Date</TableHead>
                 <TableHead>Note</TableHead>
-                <TableHead>Moyenne de la classe</TableHead>
+                <TableHead>Commentaire</TableHead>
+                <TableHead>Date</TableHead>
+                <TableHead>Classe</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {grades?.map((grade) => (
-                <TableRow key={grade.id}>
-                  <TableCell className="font-medium">{grade.course.name}</TableCell>
-                  <TableCell>{grade.type}</TableCell>
-                  <TableCell>{new Date(grade.date).toLocaleDateString('fr-FR')}</TableCell>
+                <TableRow key={grade.$id}>
+                  <TableCell className="font-medium">{grade.course?.name}</TableCell>
                   <TableCell>{grade.grade}/20</TableCell>
-                  <TableCell>{grade.course.class.name}</TableCell>
+                  <TableCell>{grade.comment || '-'}</TableCell>
+                  <TableCell>{new Date(grade.$createdAt).toLocaleDateString('fr-FR')}</TableCell>
+                  <TableCell>{grade.course?.class?.name || '-'}</TableCell>
                 </TableRow>
               ))}
             </TableBody>

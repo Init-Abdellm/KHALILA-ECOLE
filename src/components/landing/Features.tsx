@@ -1,13 +1,14 @@
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { databases, client } from "@/lib/appwrite";
+import { Query } from "appwrite";
 import { Card } from "@/components/ui/card";
 import { Calendar, Users, BookOpen, Award, Target, ChartBar } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { motion } from "framer-motion";
 
 interface Blog {
-  id: string;
+  $id: string;
   title: string;
   content: string;
   published_at: string;
@@ -59,14 +60,12 @@ const Features = () => {
   const { data: initialBlogs, isLoading } = useQuery({
     queryKey: ["blogs"],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("blogs")
-        .select("*")
-        .order("published_at", { ascending: false })
-        .limit(3);
-
-      if (error) throw error;
-      return data as Blog[];
+      const response = await databases.listDocuments(
+        process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID!,
+        'blogs',
+        [Query.orderDesc('published_at'), Query.limit(3)]
+      );
+      return response.documents as Blog[];
     },
   });
 
@@ -77,32 +76,22 @@ const Features = () => {
   }, [initialBlogs]);
 
   useEffect(() => {
-    const channel = supabase
-      .channel("blogs-changes")
-      .on(
-        "postgres_changes",
-        {
-          event: "*",
-          schema: "public",
-          table: "blogs",
-        },
-        async (payload) => {
-          console.log("Real-time blog update:", payload);
-          const { data, error } = await supabase
-            .from("blogs")
-            .select("*")
-            .order("published_at", { ascending: false })
-            .limit(3);
-
-          if (!error && data) {
-            setBlogs(data);
-          }
-        }
-      )
-      .subscribe();
+    const unsubscribe = client.subscribe(
+      `databases.${import.meta.env.VITE_APPWRITE_DATABASE_ID}.collections.blogs.documents`,
+      (response) => {
+        // Fetch latest blogs when changes occur
+        databases.listDocuments(
+          import.meta.env.VITE_APPWRITE_DATABASE_ID,
+          'blogs',
+          [Query.orderDesc('published_at'), Query.limit(3)]
+        ).then(response => {
+          setBlogs(response.documents as Blog[]);
+        });
+      }
+    );
 
     return () => {
-      supabase.removeChannel(channel);
+      unsubscribe();
     };
   }, []);
 
@@ -148,7 +137,7 @@ const Features = () => {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
               {blogs.map((blog, index) => (
                 <motion.div
-                  key={blog.id}
+                  key={blog.$id}
                   initial={{ opacity: 0, y: 20 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.5, delay: index * 0.1 }}

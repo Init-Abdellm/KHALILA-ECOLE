@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { supabase } from '@/integrations/supabase/client';
+import { account, databases } from '@/integrations/appwrite/client';
 import {
   Dialog,
   DialogContent,
@@ -17,10 +17,6 @@ interface RequirePasswordChangeProps {
   children: React.ReactNode;
 }
 
-interface Profile {
-  first_login: boolean;
-}
-
 export function RequirePasswordChange({ children }: RequirePasswordChangeProps) {
   const [loading, setLoading] = useState(true);
   const [needsPasswordChange, setNeedsPasswordChange] = useState(false);
@@ -35,20 +31,21 @@ export function RequirePasswordChange({ children }: RequirePasswordChangeProps) 
   }, []);
 
   const checkPasswordChangeRequired = async () => {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) {
+    try {
+      const user = await account.get();
+      if (!user) {
+        navigate('/login');
+        return;
+      }
+
+      // Check if first_login is true in user preferences
+      const firstLogin = user.prefs?.first_login ?? false;
+      setNeedsPasswordChange(firstLogin);
+    } catch (error) {
       navigate('/login');
-      return;
+    } finally {
+      setLoading(false);
     }
-
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('first_login')
-      .eq('id', session.user.id)
-      .single();
-
-    setNeedsPasswordChange(profile?.first_login ?? false);
-    setLoading(false);
   };
 
   const handlePasswordChange = async (e: React.FormEvent) => {
@@ -63,15 +60,13 @@ export function RequirePasswordChange({ children }: RequirePasswordChangeProps) 
     }
 
     try {
-      const { error } = await supabase.auth.updateUser({ password });
-      if (error) throw error;
+      // Update password
+      await account.updatePassword(password);
 
-      const { error: updateError } = await supabase
-        .from('profiles')
-        .update({ first_login: false })
-        .eq('id', (await supabase.auth.getUser()).data.user?.id);
-
-      if (updateError) throw updateError;
+      // Update user preferences to set first_login to false
+      await account.updatePrefs({
+        first_login: false
+      });
 
       setNeedsPasswordChange(false);
       toast({

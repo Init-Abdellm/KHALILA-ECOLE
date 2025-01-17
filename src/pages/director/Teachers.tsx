@@ -4,16 +4,17 @@ import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@
 import { Button } from "@/components/ui/button";
 import { Eye, Mail, Phone, Loader2 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { db } from "@/lib/database";
+import { Query } from "appwrite";
+import { Profile } from "@/types/database";
 
 const Teachers = () => {
-  const { data: teachers, isLoading } = useQuery({
+  const { data: teachers, isLoading } = useQuery<Profile[]>({
     queryKey: ['teachers'],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('role', 'teacher');
+      const { data, error } = await db.getProfiles([
+        Query.equal('role', 'Professeur')
+      ]);
       
       if (error) throw error;
       return data || [];
@@ -49,7 +50,7 @@ const Teachers = () => {
             </TableHeader>
             <TableBody>
               {teachers?.map((teacher) => (
-                <TableRow key={teacher.id}>
+                <TableRow key={teacher.$id}>
                   <TableCell className="font-medium">
                     {teacher.first_name} {teacher.last_name}
                   </TableCell>

@@ -2,9 +2,10 @@ import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
-import { supabase } from "@/integrations/supabase/client";
+import { account, databases } from "@/lib/appwrite";
 import { UserPlus, Pencil, Trash2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { ID, Query } from "appwrite";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -60,55 +61,51 @@ export function UserManagementDialog({ mode = 'create', userData, onSuccess }: U
 
     try {
       if (mode === 'create') {
-        const { data: authData, error: authError } = await supabase.auth.signUp({
-          email: formData.email,
-          password: formData.password || DEFAULT_PASSWORD,
-          options: {
-            data: {
-              first_name: formData.firstName,
-              last_name: formData.lastName,
-              role: formData.role,
-            },
-          },
-        });
+        // Create user account
+        const user = await account.create(
+          ID.unique(),
+          formData.email,
+          formData.password || DEFAULT_PASSWORD,
+          formData.firstName + ' ' + formData.lastName
+        );
 
-        if (authError) throw authError;
-
-        const { error: profileError } = await supabase
-          .from('profiles')
-          .update({
-            phone: formData.phone,
-            tags: formData.tags,
-            first_login: true,
-          })
-          .eq('id', authData.user?.id);
-
-        if (profileError) throw profileError;
-
-        toast({
-          title: t('admin.users.messages.createSuccess'),
-        });
-      } else {
-        const { error: updateError } = await supabase
-          .from('profiles')
-          .update({
+        // Create user profile
+        await databases.createDocument(
+          process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID!,
+          'profiles',
+          ID.unique(),
+          {
+            user_id: user.$id,
             first_name: formData.firstName,
             last_name: formData.lastName,
             role: formData.role,
             phone: formData.phone,
             tags: formData.tags,
-          })
-          .eq('id', formData.id);
+            first_login: true,
+          }
+        );
 
-        if (updateError) throw updateError;
+        toast({
+          title: t('admin.users.messages.createSuccess'),
+        });
+      } else {
+        // Update user profile
+        await databases.updateDocument(
+          process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID!,
+          'profiles',
+          formData.id!,
+          {
+            first_name: formData.firstName,
+            last_name: formData.lastName,
+            role: formData.role,
+            phone: formData.phone,
+            tags: formData.tags,
+          }
+        );
 
         if (formData.password) {
-          const { error: passwordError } = await supabase.auth.admin.updateUserById(
-            formData.id!,
-            { password: formData.password }
-          );
-
-          if (passwordError) throw passwordError;
+          // Update password if provided
+          await account.updatePassword(formData.password);
         }
 
         toast({
@@ -140,12 +137,11 @@ export function UserManagementDialog({ mode = 'create', userData, onSuccess }: U
 
   const handleDelete = async () => {
     try {
-      const { error } = await supabase
-        .from('profiles')
-        .delete()
-        .eq('id', userData?.id);
-
-      if (error) throw error;
+      await databases.deleteDocument(
+        process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID!,
+        'profiles',
+        userData?.id!
+      );
 
       toast({
         title: t('admin.users.messages.deleteSuccess'),
@@ -170,30 +166,29 @@ export function UserManagementDialog({ mode = 'create', userData, onSuccess }: U
 
     for (const user of users) {
       try {
-        const { data: authData, error: authError } = await supabase.auth.signUp({
-          email: user.email,
-          password: DEFAULT_PASSWORD,
-          options: {
-            data: {
-              first_name: user.firstName,
-              last_name: user.lastName,
-              role: user.role,
-            },
-          },
-        });
+        // Create user account
+        const createdUser = await account.create(
+          ID.unique(),
+          user.email,
+          DEFAULT_PASSWORD,
+          user.firstName + ' ' + user.lastName
+        );
 
-        if (authError) throw authError;
-
-        const { error: profileError } = await supabase
-          .from('profiles')
-          .update({
+        // Create user profile
+        await databases.createDocument(
+          process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID!,
+          'profiles',
+          ID.unique(),
+          {
+            user_id: createdUser.$id,
+            first_name: user.firstName,
+            last_name: user.lastName,
+            role: user.role,
             phone: user.phone,
             tags: user.tags,
             first_login: true,
-          })
-          .eq('id', authData.user?.id);
-
-        if (profileError) throw profileError;
+          }
+        );
 
         successCount++;
       } catch (error) {

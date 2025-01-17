@@ -1,90 +1,50 @@
 import { useQuery } from "@tanstack/react-query";
-import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { toast } from "@/components/ui/use-toast";
+import { db } from "@/lib/database";
+import { Query } from "appwrite";
 
 interface BlogPost {
-  id: string;
+  $id: string;
   title: string;
   content: string;
-  published_at: string;
+  $createdAt: string;
   author_id: string;
-  profiles: {
-    first_name: string | null;
-    last_name: string | null;
-  } | null;
+  author?: {
+    first_name: string;
+    last_name: string;
+  };
 }
 
 const Blog = () => {
-  const [blogs, setBlogs] = useState<BlogPost[]>([]);
-
-  const { data: initialBlogs, isLoading, error } = useQuery({
+  const { data: blogs, isLoading, error } = useQuery<BlogPost[]>({
     queryKey: ["blogs"],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("blogs")
-        .select(`
-          *,
-          profiles (
-            first_name,
-            last_name
-          )
-        `)
-        .order("published_at", { ascending: false });
+      const { data, error } = await db.getBlogs();
+      if (error) throw error;
 
-      if (error) {
-        console.error("Error fetching blogs:", error);
-        throw error;
-      }
+      // Get authors for these blogs
+      const authorIds = [...new Set(data?.map(blog => blog.author_id) || [])];
+      const authorsData = await Promise.all(
+        authorIds.map(id => db.getProfile(id.toString()))
+      );
+      const authorsMap = new Map(
+        authorsData
+          .filter(({ data }) => data)
+          .map(({ data }) => [data.user_id, data])
+      );
 
-      return data as BlogPost[];
+      // Combine blog and author data
+      return (data || []).map(blog => ({
+        ...blog,
+        author: authorsMap.get(blog.author_id)
+      }));
     },
   });
-
-  useEffect(() => {
-    if (initialBlogs) {
-      setBlogs(initialBlogs);
-    }
-  }, [initialBlogs]);
-
-  useEffect(() => {
-    const channel = supabase
-      .channel("blogs-changes")
-      .on(
-        "postgres_changes",
-        {
-          event: "*",
-          schema: "public",
-          table: "blogs",
-        },
-        async (payload) => {
-          console.log("Real-time blog update:", payload);
-          const { data, error } = await supabase
-            .from("blogs")
-            .select(`
-              *,
-              profiles (
-                first_name,
-                last_name
-              )
-            `)
-            .order("published_at", { ascending: false });
-
-          if (!error && data) {
-            setBlogs(data);
-          }
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, []);
 
   if (error) {
     toast({
@@ -121,17 +81,17 @@ const Blog = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
         {blogs?.map((blog) => (
           <Card 
-            key={blog.id} 
+            key={blog.$id} 
             className="overflow-hidden hover:shadow-lg transition-shadow duration-300"
           >
             <CardHeader>
               <CardTitle className="line-clamp-2">{blog.title}</CardTitle>
               <p className="text-sm text-gray-500">
-                {blog.profiles?.first_name && blog.profiles?.last_name 
-                  ? `Par ${blog.profiles.first_name} ${blog.profiles.last_name} • `
+                {blog.author?.first_name && blog.author?.last_name 
+                  ? `Par ${blog.author.first_name} ${blog.author.last_name} • `
                   : ''
                 }
-                {format(new Date(blog.published_at), "d MMMM yyyy", { locale: fr })}
+                {format(new Date(blog.$createdAt), "d MMMM yyyy", { locale: fr })}
               </p>
             </CardHeader>
             <CardContent>

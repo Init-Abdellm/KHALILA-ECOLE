@@ -1,22 +1,25 @@
 import { Card } from "@/components/ui/card";
 import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { databases } from "@/lib/appwrite";
+import { Query } from "appwrite";
 import { useProfile } from "@/lib/auth";
 import { Loader2 } from "lucide-react";
 
 interface ScheduleEntry {
-  id: string;
+  $id: string;
   name: string;
   schedule_day: string;
   schedule_time: string;
-  teacher: {
-    first_name: string | null;
-    last_name: string | null;
-  } | null;
-  classes: {
+  teacher_id: string;
+  class_id: string;
+  teacher?: {
+    firstName: string | null;
+    lastName: string | null;
+  };
+  classes?: {
     name: string;
     room: string;
-  } | null;
+  };
 }
 
 type GroupedSchedule = {
@@ -30,41 +33,76 @@ export function CombinedSchedule() {
   const { data: schedule, isLoading } = useQuery({
     queryKey: ['student-combined-schedule', profile?.id],
     queryFn: async () => {
+      if (!profile?.id) return {};
+
       // Get student's classes
-      const { data: studentClasses, error: classesError } = await supabase
-        .from('students_classes')
-        .select('class_id')
-        .eq('student_id', profile?.id);
+      const studentClasses = await databases.listDocuments(
+        import.meta.env.VITE_APPWRITE_DATABASE_ID,
+        'students_classes',
+        [Query.equal('student_id', profile.id)]
+      );
 
-      if (classesError) throw classesError;
-
-      const classIds = studentClasses?.map(sc => sc.class_id) || [];
+      const classIds = studentClasses.documents.map(sc => sc.class_id);
+      if (classIds.length === 0) return {};
 
       // Get all courses for these classes
-      const { data: coursesData, error: coursesError } = await supabase
-        .from('courses')
-        .select(`
-          *,
-          classes (
-            name,
-            room
-          ),
-          teacher:profiles!courses_teacher_id_fkey (
-            first_name,
-            last_name
-          )
-        `)
-        .in('class_id', classIds)
-        .order('schedule_time', { ascending: true });
+      const coursesData = await databases.listDocuments(
+        import.meta.env.VITE_APPWRITE_DATABASE_ID,
+        'courses',
+        [
+          Query.equal('class_id', classIds),
+          Query.orderAsc('schedule_time')
+        ]
+      );
 
-      if (coursesError) throw coursesError;
+      // Get all unique teacher IDs and class IDs
+      const teacherIds = [...new Set(coursesData.documents.map(course => course.teacher_id))];
+      const uniqueClassIds = [...new Set(coursesData.documents.map(course => course.class_id))];
 
-      // Group courses by day
-      const groupedSchedule = (coursesData || []).reduce<GroupedSchedule>((acc, course) => {
+      // Fetch teachers and classes data
+      const [teachersResponse, classesResponse] = await Promise.all([
+        databases.listDocuments(
+          import.meta.env.VITE_APPWRITE_DATABASE_ID,
+          'profiles',
+          [Query.equal('$id', teacherIds)]
+        ),
+        databases.listDocuments(
+          import.meta.env.VITE_APPWRITE_DATABASE_ID,
+          'classes',
+          [Query.equal('$id', uniqueClassIds)]
+        )
+      ]);
+
+      // Create lookup maps
+      const teachersMap = teachersResponse.documents.reduce((acc, teacher) => {
+        acc[teacher.$id] = {
+          firstName: teacher.firstName,
+          lastName: teacher.lastName
+        };
+        return acc;
+      }, {} as Record<string, { firstName: string; lastName: string }>);
+
+      const classesMap = classesResponse.documents.reduce((acc, class_) => {
+        acc[class_.$id] = {
+          name: class_.name,
+          room: class_.room
+        };
+        return acc;
+      }, {} as Record<string, { name: string; room: string }>);
+
+      // Combine data and group by day
+      const groupedSchedule = coursesData.documents.reduce<GroupedSchedule>((acc, course) => {
         if (!acc[course.schedule_day]) {
           acc[course.schedule_day] = [];
         }
-        acc[course.schedule_day].push(course);
+
+        const enrichedCourse = {
+          ...course,
+          teacher: teachersMap[course.teacher_id],
+          classes: classesMap[course.class_id]
+        };
+
+        acc[course.schedule_day].push(enrichedCourse);
         return acc;
       }, {});
 
@@ -91,14 +129,14 @@ export function CombinedSchedule() {
           <div className="space-y-3">
             {schedule?.[day]?.map((course) => (
               <div
-                key={course.id}
+                key={course.$id}
                 className="flex flex-col md:flex-row md:items-center justify-between p-3 bg-neutral-50 rounded-lg"
               >
                 <div>
                   <p className="font-medium">{course.schedule_time}</p>
                   <p className="text-sm text-gray-600">{course.name}</p>
                   <p className="text-xs text-gray-500">
-                    Prof. {course.teacher?.first_name} {course.teacher?.last_name}
+                    Prof. {course.teacher?.firstName} {course.teacher?.lastName}
                   </p>
                 </div>
                 <div className="mt-2 md:mt-0 text-right">
