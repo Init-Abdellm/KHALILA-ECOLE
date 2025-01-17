@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { databases, client } from "@/lib/appwrite";
-import { Query } from "appwrite";
+import { Query, Models } from "appwrite";
 import { Card } from "@/components/ui/card";
 import { CalendarDays, MapPin } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
@@ -25,11 +25,11 @@ const News = () => {
     queryFn: async () => {
       try {
         const response = await databases.listDocuments(
-          process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID!,
-          'events',
+          import.meta.env.VITE_APPWRITE_DATABASE_ID!,
+          import.meta.env.VITE_APPWRITE_COLLECTION_ID!,
           [Query.orderAsc('date'), Query.limit(3)]
         );
-        return response.documents as Event[];
+        return response.documents as unknown as Event[];
       } catch (err) {
         console.error("Error fetching events:", err);
         throw err;
@@ -58,32 +58,24 @@ const News = () => {
   }, [error, toast]);
 
   useEffect(() => {
-    const unsubscribe = client.subscribe(
-      `databases.${import.meta.env.VITE_APPWRITE_DATABASE_ID}.collections.events.documents`,
-      (response) => {
-        try {
-          databases.listDocuments(
-            import.meta.env.VITE_APPWRITE_DATABASE_ID,
-            'events',
-            [Query.orderAsc('date'), Query.limit(3)]
-          ).then(response => {
-            setEvents(response.documents as Event[]);
-          });
-        } catch (err) {
-          console.error("Failed to refresh events:", err);
-          toast({
-            title: "Error",
-            description: "Failed to refresh events. Please try again later.",
-            variant: "destructive",
-          });
-        }
+    const unsubscribe = client.subscribe(`databases.${import.meta.env.VITE_APPWRITE_DATABASE_ID}.collections.events.documents`, (response) => {
+      try {
+        databases.listDocuments(
+          import.meta.env.VITE_APPWRITE_DATABASE_ID!,
+          import.meta.env.VITE_APPWRITE_COLLECTION_ID!,
+          [Query.orderAsc('date'), Query.limit(3)]
+        ).then(response => {
+          setEvents(response.documents as unknown as Event[]);
+        });
+      } catch (error) {
+        console.error('Error in realtime subscription:', error);
       }
-    );
+    });
 
     return () => {
       unsubscribe();
     };
-  }, [toast]);
+  }, []);
 
   if (error) {
     return (

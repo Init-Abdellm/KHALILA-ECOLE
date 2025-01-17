@@ -8,9 +8,9 @@ const Hero = () => {
   const { t } = useTranslation();
 
   const stats = [
-    { icon: GraduationCap, label: "Élèves", value: "500+" },
-    { icon: Users, label: "Enseignants", value: "50+" },
-    { icon: Calendar, label: "Années d'excellence", value: "25+" },
+    { icon: GraduationCap, label: "Élèves", value: "300+" },
+    { icon: Users, label: "Enseignants", value: "30+" },
+    { icon: Calendar, label: "Années d'excellence", value: "5+" },
   ];
 
   return (
@@ -47,7 +47,7 @@ const Hero = () => {
               asChild
               size="lg"
               variant="outline"
-              className="text-lg border-2 border-white text-white hover:bg-white/10 transition-colors duration-300 w-full sm:w-auto"
+              className="text-lg border-2 border-white text-orange-500 font-bold hover:bg-white/10 transition-colors duration-300 w-full sm:w-auto"
             >
               <Link to="/login">
                 {t('landing.connectedSpace')}
