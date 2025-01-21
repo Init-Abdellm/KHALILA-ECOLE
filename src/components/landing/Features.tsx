@@ -1,165 +1,134 @@
-import { useQuery } from "@tanstack/react-query";
-import { useEffect, useState } from "react";
-import { databases, client } from "@/lib/appwrite";
-import { Query } from "appwrite";
 import { Card } from "@/components/ui/card";
-import { Calendar, Users, BookOpen, Award, Target, ChartBar } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { motion } from "framer-motion";
-
-interface Blog {
-  $id: string;
-  title: string;
-  content: string;
-  published_at: string;
-}
+import { Book, Heart, Users, School } from "lucide-react";
 
 const Features = () => {
-  const [blogs, setBlogs] = useState<Blog[]>([]);
   const { t } = useTranslation();
 
   const features = [
     {
-      icon: Calendar,
-      title: t('landing.features.schedule.title'),
-      description: t('landing.features.schedule.description'),
-      color: 'text-blue-500',
+      icon: Book,
+      title: t("landing.features.education.title", "Apprentissage Personnalisé"),
+      description: t(
+        "landing.features.education.description",
+        "Un programme adapté au rythme de chaque élève, favorisant la curiosité et le plaisir d'apprendre."
+      ),
+      color: "text-[#FF6B2C]",
+      bgColor: "bg-[#FF6B2C]",
+    },
+    {
+      icon: Heart,
+      title: t("landing.features.values.title", "Environnement Bienveillant"),
+      description: t(
+        "landing.features.values.description",
+        "Un cadre sécurisant et chaleureux où chaque enfant s'épanouit en toute confiance."
+      ),
+      color: "text-white",
+      bgColor: "bg-[#2E5BFF]",
     },
     {
       icon: Users,
-      title: t('landing.features.classes.title'),
-      description: t('landing.features.classes.description'),
-      color: 'text-green-500',
+      title: t("landing.features.teachers.title", "Équipe Passionnée"),
+      description: t(
+        "landing.features.teachers.description",
+        "Des enseignants dévoués qui accompagnent chaque élève vers la réussite avec enthousiasme."
+      ),
+      color: "text-[#FF6B2C]",
+      bgColor: "bg-[#FF6B2C]",
     },
     {
-      icon: BookOpen,
-      title: t('landing.features.program.title'),
-      description: t('landing.features.program.description'),
-      color: 'text-purple-500',
-    },
-    {
-      icon: Award,
-      title: "Excellence Académique",
-      description: "Un programme d'études rigoureux visant l'excellence et la réussite de chaque élève.",
-      color: 'text-yellow-500',
-    },
-    {
-      icon: Target,
-      title: "Suivi Personnalisé",
-      description: "Un accompagnement individualisé pour garantir le progrès de chaque élève.",
-      color: 'text-red-500',
-    },
-    {
-      icon: ChartBar,
-      title: "Évaluation Continue",
-      description: "Un système d'évaluation moderne permettant un suivi précis des progrès.",
-      color: 'text-indigo-500',
+      icon: School,
+      title: t("landing.features.facilities.title", "Activités Enrichissantes"),
+      description: t(
+        "landing.features.facilities.description",
+        "Des projets stimulants et des activités variées pour développer tous les talents."
+      ),
+      color: "text-white",
+      bgColor: "bg-[#2E5BFF]",
     },
   ];
 
-  const { data: initialBlogs, isLoading } = useQuery({
-    queryKey: ["blogs"],
-    queryFn: async () => {
-      const response = await databases.listDocuments(
-        process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID!,
-        'blogs',
-        [Query.orderDesc('published_at'), Query.limit(3)]
-      );
-      return response.documents as Blog[];
-    },
-  });
-
-  useEffect(() => {
-    if (initialBlogs) {
-      setBlogs(initialBlogs);
-    }
-  }, [initialBlogs]);
-
-  useEffect(() => {
-    const unsubscribe = client.subscribe(
-      `databases.${import.meta.env.VITE_APPWRITE_DATABASE_ID}.collections.blogs.documents`,
-      (response) => {
-        // Fetch latest blogs when changes occur
-        databases.listDocuments(
-          import.meta.env.VITE_APPWRITE_DATABASE_ID,
-          'blogs',
-          [Query.orderDesc('published_at'), Query.limit(3)]
-        ).then(response => {
-          setBlogs(response.documents as Blog[]);
-        });
-      }
-    );
-
-    return () => {
-      unsubscribe();
-    };
-  }, []);
-
   return (
-    <div className="py-24 bg-gradient-to-b from-background to-gray-50">
-      <div className="container mx-auto px-4">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          viewport={{ once: true }}
-          className="text-center mb-16"
-        >
-          <h2 className="text-4xl font-bold text-primary mb-4">
-            {t('landing.features.title')}
-          </h2>
-          <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-            Découvrez les atouts qui font de notre établissement un lieu d'excellence pour l'éducation de votre enfant.
-          </p>
-        </motion.div>
+    <div className="relative overflow-hidden bg-[#2E5BFF]">
+      {/* Section transition - top */}
+      <div className="absolute top-0 left-0 right-0 h-24 bg-gradient-to-b from-[#1A3BCC] to-transparent" />
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-16">
-          {features.map((feature, index) => (
-            <motion.div
-              key={index}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: index * 0.1 }}
-              viewport={{ once: true }}
-            >
-              <Card className="p-6 h-full hover:shadow-lg transition-shadow duration-300">
-                <feature.icon className={`w-12 h-12 ${feature.color} mb-4`} />
-                <h3 className="text-xl font-semibold mb-2">{feature.title}</h3>
-                <p className="text-gray-600">{feature.description}</p>
-              </Card>
-            </motion.div>
-          ))}
-        </div>
-
-        {!isLoading && blogs.length > 0 && (
-          <div className="mt-16">
-            <h3 className="text-2xl font-bold text-center mb-8">Dernières actualités</h3>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              {blogs.map((blog, index) => (
-                <motion.div
-                  key={blog.$id}
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.5, delay: index * 0.1 }}
-                  viewport={{ once: true }}
-                >
-                  <Card className="p-6 h-full hover:shadow-lg transition-shadow duration-300">
-                    <h3 className="text-xl font-semibold mb-2">{blog.title}</h3>
-                    <p className="text-gray-600 line-clamp-3">{blog.content}</p>
-                    <p className="text-sm text-gray-500 mt-4">
-                      {new Date(blog.published_at).toLocaleDateString("fr-FR", {
-                        day: "numeric",
-                        month: "long",
-                        year: "numeric",
-                      })}
-                    </p>
-                  </Card>
-                </motion.div>
-              ))}
-            </div>
-          </div>
-        )}
+      {/* Decorative background elements */}
+      <div className="absolute inset-0 bg-gradient-to-br from-[#2E5BFF] to-[#1A3BCC]" />
+      <div className="absolute inset-0">
+        <div className="absolute top-20 left-20 w-72 h-72 bg-[#FF6B2C] rounded-full blur-3xl opacity-20" />
+        <div className="absolute bottom-20 right-20 w-72 h-72 bg-[#FF6B2C] rounded-full blur-3xl opacity-20" />
       </div>
+
+      <div className="relative py-24">
+        <div className="container mx-auto px-4">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            viewport={{ once: true }}
+            className="text-center mb-16"
+          >
+            <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
+              {t("landing.features.title", "Notre Approche Éducative")}
+            </h2>
+            <p className="text-xl text-white/80 max-w-3xl mx-auto">
+              {t(
+                "landing.features.subtitle",
+                "Une pédagogie innovante centrée sur l'épanouissement et la réussite de chaque élève."
+              )}
+            </p>
+          </motion.div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-6xl mx-auto">
+            {features.map((feature, index) => (
+              <motion.div
+                key={index}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: index * 0.1 }}
+                viewport={{ once: true }}
+              >
+                <Card className="p-8 h-full hover:shadow-xl transition-all duration-300 bg-white/10 backdrop-blur-sm border-2 border-white/20 group">
+                  <div className="mb-6">
+                    <div className={`inline-flex items-center justify-center w-14 h-14 rounded-xl ${feature.bgColor} bg-opacity-20 group-hover:bg-opacity-30 transition-all duration-300`}>
+                      <feature.icon className={`w-7 h-7 ${feature.color}`} />
+                    </div>
+                  </div>
+                  <h3 className={`text-xl font-semibold mb-4 ${feature.color}`}>
+                    {feature.title}
+                  </h3>
+                  <p className="text-white/80 leading-relaxed">
+                    {feature.description}
+                  </p>
+                </Card>
+              </motion.div>
+            ))}
+          </div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.4 }}
+            viewport={{ once: true }}
+            className="mt-24 max-w-4xl mx-auto text-center"
+          >
+            <blockquote className="text-2xl font-serif text-white italic mb-6">
+              {t(
+                "landing.features.quote",
+                "Chaque enfant est unique, et notre mission est de révéler le meilleur de chacun d'eux."
+              )}
+            </blockquote>
+            <cite className="text-lg text-white/90 font-medium block">
+              {t("landing.features.quote_author", "L'équipe pédagogique de l'École Khalilia")}
+            </cite>
+          </motion.div>
+        </div>
+      </div>
+
+      {/* Section transition - bottom */}
+      <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-[#1A3BCC] to-transparent" />
     </div>
   );
 };

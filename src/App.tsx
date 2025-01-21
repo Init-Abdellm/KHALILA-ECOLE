@@ -4,6 +4,7 @@ import Login from "@/pages/Login";
 import Register from "@/pages/Register";
 import Blog from "@/pages/Blog";
 import Events from "@/pages/Events";
+import About from "@/pages/About";
 
 // Admin routes
 import AdminDashboard from "@/pages/admin/Dashboard";
@@ -55,6 +56,7 @@ function App() {
       <Route path="/register" element={<Register />} />
       <Route path="/blog" element={<Blog />} />
       <Route path="/events" element={<Events />} />
+      <Route path="/about" element={<About />} />
 
       {/* Admin routes */}
       <Route path="/admin" element={<AdminDashboard />} />
