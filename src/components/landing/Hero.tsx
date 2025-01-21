@@ -3,9 +3,44 @@ import { ArrowRight, GraduationCap } from "lucide-react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { useTranslation } from "react-i18next";
+import { useAuth } from "@/hooks/useAuth";
+import { account } from "@/integrations/appwrite/client";
+import { useEffect, useState } from "react";
 
 const Hero = () => {
   const { t } = useTranslation();
+  const { isAuthenticated, isLoading } = useAuth();
+  const [userRole, setUserRole] = useState<string>('student');
+  const isAdminBypass = localStorage.getItem('adminBypass') === 'true';
+
+  useEffect(() => {
+    const getUserRole = async () => {
+      if (isAuthenticated && !isAdminBypass) {
+        try {
+          const user = await account.get();
+          setUserRole(user.prefs?.role || 'student');
+        } catch (error) {
+          console.error('Error fetching user role:', error);
+        }
+      }
+    };
+    getUserRole();
+  }, [isAuthenticated, isAdminBypass]);
+
+  const getDefaultRoute = (role: string) => {
+    switch (role) {
+      case 'admin':
+        return '/admin';
+      case 'director':
+        return '/director';
+      case 'teacher':
+        return '/teacher';
+      case 'student':
+        return '/student';
+      default:
+        return '/dashboard';
+    }
+  };
 
   const scrollToAdmission = () => {
     const admissionForm = document.getElementById('admission-form');
@@ -28,15 +63,39 @@ const Hero = () => {
       <div className="relative">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex justify-end">
-            <Button
-              asChild
-              variant="outline"
-              className="border-2 border-[#FF6B2C] text-[#FF6B2C] hover:bg-[#FF6B2C]/10 hover:text-white transition-all duration-300 bg-transparent"
-            >
-              <Link to="/login">
-                {t("landing.hero.login", "Espace Connecté")}
-              </Link>
-            </Button>
+            {!isLoading && (
+              isAdminBypass ? (
+                <Button
+                  asChild
+                  variant="outline"
+                  className="border-2 border-[#FF6B2C] text-[#FF6B2C] hover:bg-[#FF6B2C]/10 hover:text-white transition-all duration-300 bg-transparent"
+                >
+                  <Link to="/login">
+                    {t("landing.hero.roleSelector", "Role Selector")}
+                  </Link>
+                </Button>
+              ) : isAuthenticated ? (
+                <Button
+                  asChild
+                  variant="outline"
+                  className="border-2 border-[#FF6B2C] text-[#FF6B2C] hover:bg-[#FF6B2C]/10 hover:text-white transition-all duration-300 bg-transparent"
+                >
+                  <Link to={getDefaultRoute(userRole)}>
+                    {t("landing.hero.dashboard", "Tableau de bord")}
+                  </Link>
+                </Button>
+              ) : (
+                <Button
+                  asChild
+                  variant="outline"
+                  className="border-2 border-[#FF6B2C] text-[#FF6B2C] hover:bg-[#FF6B2C]/10 hover:text-white transition-all duration-300 bg-transparent"
+                >
+                  <Link to="/login">
+                    {t("landing.hero.login", "Espace Connecté")}
+                  </Link>
+                </Button>
+              )
+            )}
           </div>
         </div>
       </div>

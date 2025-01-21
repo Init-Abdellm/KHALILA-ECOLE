@@ -11,15 +11,33 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import RoleSelector from "@/components/RoleSelector";
+import { useAuth } from "@/hooks/useAuth";
 
 const Login = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { t } = useTranslation();
+  const { login, isAuthenticated, isLoading } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const [isAdminBypass, setIsAdminBypass] = useState(false);
+  const [showRoleSelector, setShowRoleSelector] = useState(() => {
+    return localStorage.getItem('adminBypass') === 'true';
+  });
+
+  useEffect(() => {
+    if (isAuthenticated && !isLoading && !showRoleSelector) {
+      const from = location.state?.from?.pathname || '/admin';
+      navigate(from, { replace: true });
+    }
+  }, [isAuthenticated, isLoading, navigate, location, showRoleSelector]);
+
+  useEffect(() => {
+    // If admin bypass is active, show role selector
+    if (localStorage.getItem('adminBypass') === 'true') {
+      setShowRoleSelector(true);
+    }
+  }, []);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -28,28 +46,32 @@ const Login = () => {
     try {
       // Development bypass for admin login
       if (email === "admin@admin.com" && password === "admin") {
+        localStorage.setItem('adminBypass', 'true');
+        setShowRoleSelector(true);
         toast({
           title: t('login.success'),
           description: "Development admin login successful",
         });
-        setIsAdminBypass(true);
         setLoading(false);
         return;
       }
 
-      await account.createEmailSession(email, password);
-      const user = await account.get();
+      // Regular authentication flow
+      const result = await login(email, password);
       
-      // Get user role from custom attributes or a separate collection
-      const role = user.prefs?.role || 'student';
-      
-      toast({
-        title: t('login.success'),
-        description: t('login.success'),
-      });
+      if (result.success) {
+        localStorage.removeItem('adminBypass'); // Clear any existing bypass
+        const user = await account.get();
+        const role = user.prefs?.role || 'student';
+        
+        toast({
+          title: t('login.success'),
+          description: t('login.success'),
+        });
 
-      const from = location.state?.from?.pathname || getDefaultRoute(role);
-      navigate(from, { replace: true });
+        const from = location.state?.from?.pathname || getDefaultRoute(role);
+        navigate(from, { replace: true });
+      }
     } catch (error: any) {
       toast({
         title: t('login.error'),
@@ -76,20 +98,19 @@ const Login = () => {
     }
   };
 
-  if (isAdminBypass) {
+  if (showRoleSelector) {
     return (
-      <div className="min-h-screen bg-[#2E5BFF] flex flex-col items-center justify-center p-4 relative overflow-hidden">
-        {/* Decorative background elements */}
+      <div className="min-h-screen bg-[#2E5BFF] flex flex-col items-center justify-center p-4 md:p-8 relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-[#2E5BFF] to-[#1A3BCC]" />
         <div className="absolute inset-0">
           <div className="absolute top-20 right-20 w-96 h-96 bg-[#FF6B2C] rounded-full blur-3xl opacity-20" />
           <div className="absolute -bottom-20 -left-20 w-96 h-96 bg-[#FF6B2C] rounded-full blur-3xl opacity-20" />
         </div>
 
-        <div className="relative w-full max-w-md space-y-4">
+        <div className="relative w-full max-w-6xl mx-auto">
           <div className="text-center mb-8">
-            <h1 className="text-2xl font-bold text-white mb-2">Development Mode</h1>
-            <p className="text-white/80">Select a role to access different dashboards</p>
+            <h1 className="text-3xl font-bold text-white mb-2">Development Mode</h1>
+            <p className="text-white/80 text-lg">Select a role to access different dashboards</p>
           </div>
           <RoleSelector />
         </div>

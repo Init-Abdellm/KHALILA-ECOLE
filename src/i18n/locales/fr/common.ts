@@ -38,6 +38,11 @@ export default {
     subtitle: 'Une Expérience Éducative Moderne',
     discoverBlog: 'Découvrir Notre Blog',
     connectedSpace: 'Espace Connecté',
+    hero: {
+      login: 'Espace Connecté',
+      dashboard: 'Tableau de bord',
+      roleSelector: 'Sélecteur de rôle',
+    },
     features: {
       title: 'Notre Approche Pédagogique',
       schedule: {
