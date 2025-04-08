@@ -2,6 +2,8 @@
 
 Welcome to KHALILA-ECOLE, a comprehensive school management system designed to streamline educational administration and enhance the learning experience. Built with modern web technologies, this platform serves as a central hub for all school-related activities, connecting administrators, directors, teachers, and students in a seamless digital environment.
 
+**Live Preview:** [https://khalilia.vercel.app/](https://khalilia.vercel.app/)
+
 ## Overview
 
 KHALILA-ECOLE is built using React and TypeScript, providing a robust and maintainable codebase. The system is designed to handle all aspects of school management, from administrative tasks to academic tracking and communication.
